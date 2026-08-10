@@ -1,4 +1,4 @@
-# Hotel SaaS setup status
+# Avkarsh setup status
 
 Date: 2026-08-10
 
@@ -14,14 +14,13 @@ Date: 2026-08-10
 - pnpm workspace and Next.js App Router application scaffolded.
 - Next.js, React, TypeScript, Tailwind CSS, Supabase clients, Zod, Vitest, ESLint, and Geist are pinned.
 - `getdesign` 0.6.24 and Supabase CLI 2.110.0 are pinned as development tools and verified executable.
-- Vercel-inspired `DESIGN.md` tailored for hotel operations, multilingual expansion, accessibility, low-end mobile performance, and 44px minimum touch targets.
+- Standard SaaS `DESIGN.md` tailored for hotel operations, multilingual expansion, accessibility, low-end mobile performance, and 44px minimum touch targets.
 - PWA manifest, install icons, viewport metadata, and a privacy-safe service worker registration added.
 - Service worker deliberately does not cache authenticated pages or API responses.
 - Google OAuth sign-in screen and Supabase SSR callback route added. They fail closed when public Supabase configuration is missing.
 - Authenticated `/app` workspace and accessible property switcher added. It queries only the properties returned through Supabase RLS; no mock tenant data is shown.
 - Next.js 16 session-refresh proxy added for configured Supabase environments.
 - `mobile-app-ui-design` Codex skill verified as already installed and byte-identical to the current GitHub source checked on 2026-08-10.
-- Vercel Web Interface Guidelines and Geist guidance verified as available in Codex.
 
 ## Web verification
 

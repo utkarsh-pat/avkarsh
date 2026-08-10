@@ -5,16 +5,16 @@ import { PwaRegistration } from "@/components/pwa-registration";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Hotel SaaS", template: "%s | Hotel SaaS" },
+  title: { default: "Avkarsh", template: "%s | Avkarsh" },
   description: "Secure hotel operations for every property and shift.",
-  applicationName: "Hotel SaaS",
+  applicationName: "Avkarsh",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#171717",
+  themeColor: "#2563eb",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

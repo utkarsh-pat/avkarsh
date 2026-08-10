@@ -1,16 +1,16 @@
 {
-  "name": "hotel-saas",
+  "name": "avkarsh",
   "private": true,
   "packageManager": "pnpm@11.16.0",
   "engines": {
     "node": ">=24.0.0"
   },
   "scripts": {
-    "dev": "pnpm --filter @hotel-saas/web dev",
-    "build": "pnpm --filter @hotel-saas/web build",
-    "lint": "pnpm --filter @hotel-saas/web lint",
-    "typecheck": "pnpm --filter @hotel-saas/web typecheck",
-    "test": "pnpm --filter @hotel-saas/web test",
+    "dev": "pnpm --filter @avkarsh/web dev",
+    "build": "pnpm --filter @avkarsh/web build",
+    "lint": "pnpm --filter @avkarsh/web lint",
+    "typecheck": "pnpm --filter @avkarsh/web typecheck",
+    "test": "pnpm --filter @avkarsh/web test",
     "verify:web": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "db:start": "supabase start",
     "db:stop": "supabase stop",

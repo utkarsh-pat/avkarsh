@@ -1,4 +1,4 @@
-# Hotel SaaS
+# Avkarsh
 
 Multi-tenant hotel operations platform. The approved M0 architecture pack is in `outputs/hotel-saas-m0`; implementation starts with the M1 identity, tenancy, authorization, audit, and delivery foundations.
 

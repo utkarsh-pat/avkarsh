@@ -27,7 +27,7 @@ export function PropertyWorkspace({ email, properties, loadError }: PropertyWork
   return (
     <main className="workspace-shell">
       <header className="workspace-topbar">
-        <Link className="brand" href="/">Hotel SaaS</Link>
+        <Link className="brand" href="/">Avkarsh</Link>
         <p className="workspace-user">{email}</p>
       </header>
       <section className="workspace-content" aria-labelledby="workspace-title">

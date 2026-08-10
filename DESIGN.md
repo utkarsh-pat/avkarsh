@@ -1,16 +1,12 @@
 ---
-name: hotel-saas-precision-operations
-version: 1.0.0
-inspiration:
-  - Vercel Web Interface Guidelines
-  - Geist typography system
-  - mobile-app-ui-design skill
-source_template: https://github.com/VoltAgent/awesome-design-md/tree/main/design-md/vercel
+name: avkarsh-standard-saas-ui
+version: 1.1.0
+design_system: standard-saas
 ---
 
-# Hotel SaaS design direction
+# Avkarsh design direction
 
-This is an operations product, not a Vercel clone. Use Vercel's visual precision and Geist typography while prioritizing fast hotel workflows, multilingual readability, accessibility, and low-end Android performance.
+Use a familiar, restrained SaaS interface: system typography, clear navigation, readable cards, conventional form controls, and a single accessible blue primary action. Prioritize fast hotel workflows, multilingual readability, accessibility, and low-end Android performance.
 
 ## Principles
 
@@ -34,14 +30,15 @@ This is an operations product, not a Vercel clone. Use Vercel's visual precision
 Light is the default operational theme. Dark mode may follow after contrast verification.
 
 ```css
---canvas: #ffffff;
---surface: #fafafa;
---surface-raised: #ffffff;
---ink: #171717;
---body: #525252;
---muted: #737373;
---hairline: #e5e5e5;
---primary: #171717;
+--canvas: #f8fafc;
+--surface: #ffffff;
+--surface-subtle: #f1f5f9;
+--ink: #0f172a;
+--body: #475569;
+--muted: #64748b;
+--hairline: #dbe3ee;
+--primary: #2563eb;
+--primary-hover: #1d4ed8;
 --primary-on: #ffffff;
 --focus: #2563eb;
 --info: #2563eb;
@@ -57,9 +54,9 @@ Semantic status treatments combine icon + label + tinted surface. Minimum text c
 - Base grid: 4px; preferred rhythm: 8px.
 - Page gutters: 16px mobile, 24px tablet, 32px desktop.
 - Content width: 1440px maximum.
-- Radius: 6px controls, 10px cards, full radius only for compact status chips.
+- Radius: 8px controls, 12px cards, full radius only for compact status chips.
 - Touch targets: 44x44px minimum; primary mobile actions prefer 48px height.
-- Use hairline borders and restrained shadows. No glassmorphism in operational screens.
+- Use hairline borders, white surfaces, and subtle elevation. No glassmorphism, grids, oversized display type, or decorative technical motifs in operational screens.
 
 ## App shell
 

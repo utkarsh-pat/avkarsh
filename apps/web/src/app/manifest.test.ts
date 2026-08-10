@@ -7,7 +7,7 @@ describe("PWA manifest", () => {
 
     expect(result.start_url).toBe("/");
     expect(result.display).toBe("standalone");
-    expect(result.name).toBe("Hotel SaaS");
+    expect(result.name).toBe("Avkarsh");
   });
 
   it("provides standard and maskable install icons", () => {

@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Hotel SaaS",
-    short_name: "Hotel SaaS",
+    name: "Avkarsh",
+    short_name: "Avkarsh",
     description: "Secure hotel operations for every property and shift.",
     start_url: "/",
     display: "standalone",

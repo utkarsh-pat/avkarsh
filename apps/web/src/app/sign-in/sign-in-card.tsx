@@ -38,7 +38,7 @@ export function SignInCard({ error }: { error?: string }) {
   return (
     <main className="sign-in-shell">
       <section className="sign-in-card" aria-labelledby="sign-in-title">
-        <Link className="brand" href="/">Hotel SaaS</Link>
+        <Link className="brand" href="/">Avkarsh</Link>
         <p className="eyebrow">MANAGEMENT ACCESS</p>
         <h1 id="sign-in-title">Start your shift with a secure identity.</h1>
         <p className="sign-in-copy">
