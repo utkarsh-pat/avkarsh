@@ -35,12 +35,13 @@ export async function reviewOnboardingRequest(
   _state: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
+  const decision = value(formData, "decision");
   const parsed = reviewSchema.safeParse({
     requestId: value(formData, "requestId"),
-    decision: value(formData, "decision"),
+    decision,
     reason: value(formData, "reason"),
     permissions: formData.getAll("permissions").map(String),
-    plan: value(formData, "plan") || "trial",
+    plan: value(formData, "plan") || (decision === "reject" ? "trial" : ""),
     billingCycle: value(formData, "billingCycle") || "monthly",
     amountRupees: value(formData, "amountRupees") || "0",
     currencyCode: value(formData, "currencyCode") || "INR",

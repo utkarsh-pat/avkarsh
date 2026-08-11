@@ -282,13 +282,6 @@ h2 { font-size: clamp(30px, 4vw, 48px); font-weight: 650; letter-spacing: -.04em
 .registration-form input:not([type="checkbox"]), .registration-form select, .registration-form textarea, .admin-review-form input:not([type="checkbox"]), .admin-review-form select, .admin-review-form textarea, .access-action-form input { background: white; border: 1px solid #cfd6e3; border-radius: 8px; color: var(--ink); font: inherit; min-height: 44px; padding: 10px 12px; width: 100%; }
 .registration-form input:focus, .registration-form select:focus, .registration-form textarea:focus, .admin-review-form input:focus, .admin-review-form select:focus, .admin-review-form textarea:focus, .access-action-form input:focus { border-color: var(--primary); outline: 3px solid rgba(37,99,235,.15); }
 .registration-form input[readonly] { background: #f3f4f6; color: var(--body); }
-.fieldset-copy { color: var(--body); line-height: 1.6; margin: 8px 0 18px; }
-.permission-check-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.permission-check { align-items: flex-start; border: 1px solid var(--hairline); border-radius: 10px; cursor: pointer; display: flex !important; gap: 12px !important; padding: 14px; }
-.permission-check:has(input:checked) { background: #eff6ff; border-color: #93c5fd; }
-.permission-check input { accent-color: var(--primary); height: 17px; margin-top: 2px; width: 17px; }
-.permission-check span { display: grid; gap: 4px; }
-.permission-check small { color: var(--body); font-weight: 450; line-height: 1.4; }
 .terms-check { align-items: flex-start; display: flex !important; gap: 10px !important; margin-top: 18px; }
 .terms-check input { accent-color: var(--primary); margin-top: 2px; }
 .terms-check span { color: var(--body); font-weight: 450; line-height: 1.5; }
@@ -424,7 +417,7 @@ h2 { font-size: clamp(30px, 4vw, 48px); font-weight: 650; letter-spacing: -.04em
   .workspace-section-heading, .module-grid { grid-template-columns: 1fr; }
   .workspace-section-heading { align-items: start; gap: 16px; }
   .workspace-header-actions > a { display: none; }
-  .identity-grid, .two-column, .permission-check-grid { grid-template-columns: 1fr; }
+  .identity-grid, .two-column { grid-template-columns: 1fr; }
   .registration-heading, .registration-submit-row, .admin-heading, .admin-section-heading { align-items: flex-start; flex-direction: column; }
   .full-span { grid-column: auto; }
   .registration-submit-row .button { width: 100%; }
@@ -484,3 +477,45 @@ h2 { font-size: clamp(30px, 4vw, 48px); font-weight: 650; letter-spacing: -.04em
 :root[data-theme="dark"] input,
 :root[data-theme="dark"] select,
 :root[data-theme="dark"] textarea { background: var(--surface-subtle); border-color: var(--hairline); color: var(--ink); }
+
+/* Dark-mode semantic surfaces must not inherit light-theme fills. */
+:root[data-theme="dark"] .request-receipt,
+:root[data-theme="dark"] .live-admin-badge,
+:root[data-theme="dark"] .admin-stats div { background: var(--surface); }
+:root[data-theme="dark"] .registration-form input[readonly] { background: var(--surface-subtle); color: var(--body); }
+:root[data-theme="dark"] .locked-modules span,
+:root[data-theme="dark"] .requested-module-list span,
+:root[data-theme="dark"] .approved-permissions span,
+:root[data-theme="dark"] .status-pill.expired,
+:root[data-theme="dark"] .status-pill.suspended {
+  background: var(--surface-subtle);
+  color: var(--body);
+}
+:root[data-theme="dark"] .verified-identity,
+:root[data-theme="dark"] .status-pill.approved,
+:root[data-theme="dark"] .status-pill.active,
+:root[data-theme="dark"] .admin-action-message.success {
+  background: #16392f;
+  border-color: #236b55;
+  color: #86efac;
+}
+:root[data-theme="dark"] .verified-identity small { color: #86efac; }
+:root[data-theme="dark"] .status-pill.pending,
+:root[data-theme="dark"] .status-pill.under_review,
+:root[data-theme="dark"] .request-note {
+  background: #3b2c1f;
+  border-color: #7c4a1d;
+  color: #fdba74;
+}
+:root[data-theme="dark"] .status-pill.rejected,
+:root[data-theme="dark"] .status-pill.revoked,
+:root[data-theme="dark"] .rejection-summary,
+:root[data-theme="dark"] .admin-action-message.error,
+:root[data-theme="dark"] .form-message {
+  background: #3f222d;
+  border-color: #7f3345;
+  color: #fda4af;
+}
+:root[data-theme="dark"] .status-pill.claimed { background: #282c5b; color: #a5b4fc; }
+:root[data-theme="dark"] .button.danger { background: transparent; border-color: #9f4560; color: #fda4af; }
+:root[data-theme="dark"] .button.danger:hover { background: #3f222d; }

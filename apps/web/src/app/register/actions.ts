@@ -4,12 +4,9 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
-  onboardingPermissions,
   onboardingSubmissionSchema,
   type OnboardingActionState,
 } from "@/lib/onboarding";
-
-const permissionKeys = new Set(onboardingPermissions.map(([key]) => key));
 
 function field(formData: FormData, name: string) {
   return String(formData.get(name) ?? "");
@@ -35,11 +32,8 @@ export async function submitOnboardingRequest(
     countryCode: field(formData, "countryCode"),
     timezone: field(formData, "timezone"),
     currencyCode: field(formData, "currencyCode"),
-    requestedPlan: field(formData, "requestedPlan"),
-    requestedPermissions: formData
-      .getAll("requestedPermissions")
-      .map(String)
-      .filter((value) => permissionKeys.has(value as never)),
+    requestedPlan: "pending_admin_review",
+    requestedPermissions: [],
     notes: field(formData, "notes"),
     termsAccepted: field(formData, "termsAccepted"),
   });
@@ -100,4 +94,3 @@ export async function submitOnboardingRequest(
     message: "Your request is in the Avkarsh approval queue. We will not create access until a platform administrator reviews it.",
   };
 }
-

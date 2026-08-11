@@ -107,7 +107,7 @@ export default async function AdminOnboardingPage() {
                       <div><dt>Operating context</dt><dd>{request.timezone}<small>{request.currency_code} · requested {request.requested_plan}</small></dd></div>
                     </dl>
                     {request.notes ? <aside className="request-note"><strong>Applicant note</strong><p>{request.notes}</p></aside> : null}
-                    <div className="requested-module-list"><strong>Requested modules</strong><div>{request.requested_permissions.map((permission) => <span key={permission}>{humanize(permission)}</span>)}</div></div>
+                    <div className="requested-module-list"><strong>Access discussion</strong><div>{request.requested_permissions.length > 0 ? request.requested_permissions.map((permission) => <span key={permission}>{humanize(permission)}</span>) : <span>Permissions to be decided during review</span>}</div></div>
 
                     {["pending", "under_review"].includes(request.status) ? (
                       <PendingRequestActions requestId={request.id} requestedPermissions={request.requested_permissions} requestedPlan={request.requested_plan} currencyCode={request.currency_code} />

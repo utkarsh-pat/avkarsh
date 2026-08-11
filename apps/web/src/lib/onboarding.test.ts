@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  defaultRequestedPermissions,
   onboardingPermissions,
   onboardingSubmissionSchema,
   propertyStaffPermissions,
@@ -22,8 +21,8 @@ const validSubmission = {
   countryCode: "in",
   timezone: "Asia/Kolkata",
   currencyCode: "inr",
-  requestedPlan: "trial",
-  requestedPermissions: defaultRequestedPermissions,
+  requestedPlan: "pending_admin_review",
+  requestedPermissions: [],
   notes: "Opening next month",
   termsAccepted: "on",
 };
@@ -42,10 +41,10 @@ describe("owner onboarding contract", () => {
     expect(parsed.roomCount).toBe(24);
   });
 
-  it("rejects empty permissions and implausible inventory", () => {
+  it("defers commercial decisions while rejecting implausible inventory", () => {
+    expect(onboardingSubmissionSchema.safeParse(validSubmission).success).toBe(true);
     expect(onboardingSubmissionSchema.safeParse({
       ...validSubmission,
-      requestedPermissions: [],
       roomCount: 0,
     }).success).toBe(false);
   });
