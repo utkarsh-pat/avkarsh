@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AppShell } from "@/components/app-shell";
 
 type PropertyScope = {
   id: string;
@@ -17,14 +18,8 @@ type PropertyWorkspaceProps = {
 
 export function PropertyWorkspace({ email, properties, loadError, isPlatformAdmin }: PropertyWorkspaceProps) {
   return (
+    <AppShell email={email} isPlatformAdmin={isPlatformAdmin}>
     <main className="workspace-shell">
-      <header className="workspace-topbar">
-        <Link className="brand" href="/">Avkarsh</Link>
-        <div className="workspace-header-actions">
-          {isPlatformAdmin ? <Link href="/admin/onboarding">Admin control plane</Link> : null}
-          <p className="workspace-user">{email}</p>
-        </div>
-      </header>
       <section className="workspace-content" aria-labelledby="workspace-title">
         <p className="eyebrow">PROPERTY WORKSPACE</p>
         <h1 id="workspace-title">Choose where this shift starts.</h1>
@@ -57,5 +52,6 @@ export function PropertyWorkspace({ email, properties, loadError, isPlatformAdmi
         )}
       </section>
     </main>
+    </AppShell>
   );
 }

@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CreateInvitationForm, InvitationReviewForm, MemberAccessForm } from "./team-controls";
+import { AppShell } from "@/components/app-shell";
 
 type PageProps = { params: Promise<{ propertyId: string }> };
 type Invitation = {
@@ -53,8 +54,8 @@ export default async function PropertyTeamPage({ params }: PageProps) {
   const currentProfileId = typeof claimsData.claims.sub === "string" ? claimsData.claims.sub : "";
 
   return (
+    <AppShell property={{ id: property.id, code: property.code, name: property.name }}>
     <main className="property-shell">
-      <header className="property-topbar"><Link className="brand" href="/">Avkarsh</Link><div className="property-identity"><span>{property.code}</span><p>Team access</p></div></header>
       <section className="property-dashboard team-dashboard" aria-labelledby="team-title">
         <Link className="back-link" href={`/app/property/${propertyId}`}>← Back to workspace</Link>
         <div className="property-hero"><div><p className="eyebrow">PROPERTY RBAC</p><h1 id="team-title">{property.name} team</h1><p className="property-organization">Invite, verify, approve, suspend, and restore property-scoped access.</p></div><span className="lifecycle-badge">{members.length} members</span></div>
@@ -94,5 +95,6 @@ export default async function PropertyTeamPage({ params }: PageProps) {
         </section>
       </section>
     </main>
+    </AppShell>
   );
 }
