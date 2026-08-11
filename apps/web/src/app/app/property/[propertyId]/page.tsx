@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { workspaceModules } from "@/lib/workspace-modules";
+import { AppShell } from "@/components/app-shell";
 
 type PropertyContextPageProps = {
   params: Promise<{ propertyId: string }>;
@@ -85,12 +86,8 @@ export default async function PropertyContextPage({ params }: PropertyContextPag
   const email = typeof claimsData.claims.email === "string" ? claimsData.claims.email : "Management user";
 
   return (
+    <AppShell email={email} property={{ id: propertyContext.id, code: propertyContext.code, name: propertyContext.name }}>
     <main className="property-shell">
-      <header className="property-topbar">
-        <Link className="brand" href="/">Avkarsh</Link>
-        <div className="property-identity"><span>{propertyContext.code}</span><p>{email}</p></div>
-      </header>
-
       <section className="property-dashboard" aria-labelledby="property-title">
         <Link className="back-link" href="/app">← Switch property</Link>
 
@@ -142,5 +139,6 @@ export default async function PropertyContextPage({ params }: PropertyContextPag
         </aside>
       </section>
     </main>
+    </AppShell>
   );
 }

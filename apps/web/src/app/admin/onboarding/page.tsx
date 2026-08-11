@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PendingRequestActions, ProvisionedRequestActions, ProvisionedSettingsActions } from "./admin-request-actions";
+import { AppShell } from "@/components/app-shell";
 
 type OnboardingRequest = {
   id: string;
@@ -77,10 +77,11 @@ export default async function AdminOnboardingPage() {
   const pendingCount = requests.filter((request) => ["pending", "under_review"].includes(request.status)).length;
   const approvedCount = requests.filter((request) => request.status === "approved").length;
   const revokedCount = requests.filter((request) => request.status === "revoked").length;
+  const email = typeof claimsData.claims.email === "string" ? claimsData.claims.email : "Platform administrator";
 
   return (
+    <AppShell email={email} isPlatformAdmin>
     <main className="admin-shell">
-      <header className="admin-topbar"><Link className="brand" href="/">Avkarsh</Link><nav><Link href="/app">Tenant workspace</Link><span>{platformAdmin.admin_role.replaceAll("_", " ")}</span></nav></header>
       <section className="admin-dashboard" aria-labelledby="admin-title">
         <div className="admin-heading"><div><p className="eyebrow">SAAS CONTROL PLANE</p><h1 id="admin-title">Owner onboarding</h1><p>Review identity context, grant least-privilege modules, set commercial terms, and control access lifecycle.</p></div><span className="live-admin-badge"><i aria-hidden="true" />Platform protected</span></div>
         <dl className="admin-stats"><div><dt>Awaiting review</dt><dd>{pendingCount}</dd></div><div><dt>Active approvals</dt><dd>{approvedCount}</dd></div><div><dt>Revoked</dt><dd>{revokedCount}</dd></div><div><dt>Total requests</dt><dd>{requests.length}</dd></div></dl>
@@ -141,5 +142,6 @@ export default async function AdminOnboardingPage() {
         </section>
       </section>
     </main>
+    </AppShell>
   );
 }
