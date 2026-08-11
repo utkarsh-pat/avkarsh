@@ -119,6 +119,7 @@ export default async function PropertyContextPage({ params }: PropertyContextPag
               <article className="module-card" key={module.code}>
                 <div className="module-card-topline"><span className="module-code" aria-hidden="true">{module.code}</span><span className="module-status enabled">Enabled</span></div>
                 <h3>{module.title}</h3><p>{module.description}</p>
+                {module.permission === "staff.manage" ? <Link className="module-card-link" href={`/app/property/${propertyId}/team`}>Manage team →</Link> : null}
               </article>
             ))}
           </div>
@@ -143,4 +144,3 @@ export default async function PropertyContextPage({ params }: PropertyContextPag
     </main>
   );
 }
-

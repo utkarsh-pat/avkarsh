@@ -25,6 +25,7 @@ Date: 2026-08-11
 - Platform-protected `/admin/onboarding` control plane added for reviewing requests, choosing the final least-privilege module set, configuring plan/billing/trial/property/staff limits, approving or rejecting, and revoking or restoring provisioned tenants.
 - Provisioned tenants can now be edited after approval. Permission replacement and commercial controls remain one audited database transaction, and editing a revoked tenant never silently restores access.
 - Property workspaces are permission-aware: RLS first scopes the property, then the database authorization resolver decides each visible module. Missing or failed decisions are fail-closed and appear only as locked modules.
+- Property owners with `staff.manage` now have a team-access workspace. Invitations store only SHA-256 token/email hashes, can be claimed only by the exact Google identity, require a separate owner approval before membership activation, and support immediate property-level suspension/restoration.
 - Anonymous approvals remain unclaimed until the applicant signs in with the exact verified Google email. Approval provisions the organization, first property, tenant role, permission grants, subscription, and audit record in one database transaction.
 - `mobile-app-ui-design` Codex skill verified as already installed and byte-identical to the current GitHub source checked on 2026-08-10.
 - ServiZephyr reuse analysis documents which login/onboarding/admin/owner/RBAC/WhatsApp patterns were adapted and which Firebase/client-authority patterns were deliberately rejected.
@@ -36,7 +37,7 @@ Date: 2026-08-11
 - Production dependency audit found no known vulnerabilities after patched `sharp` and `postcss` overrides.
 - Lint passed with zero warnings.
 - Strict TypeScript check passed.
-- PWA, owner-onboarding, and permission-catalogue contract tests passed: 7/7.
+- PWA, owner-onboarding, staff-boundary, and permission-catalogue contract tests passed: 8/8.
 - Next.js 16.2.11 production build passed after the sign-in and callback routes were added.
 
 ## M1 database foundation
@@ -48,10 +49,10 @@ Date: 2026-08-11
 - The deterministic management authorization resolver now enforces active actor/membership/property scope, permanent explicit-deny precedence, authentication ceilings, recent-Google step-up requirements, tenant lifecycle restrictions, and minimum applicable typed financial limits.
 - Platform-admin RBAC is isolated from tenant RBAC. The onboarding migration adds typed requests and subscriptions, verified-email claims, transactional admin review, synchronized revoke/restore, and append-only audit events.
 - Dedicated pgTAP contract tests cover the hardening tables, RLS, browser privilege boundary, validation constraints, and audit immutability trigger.
-- 69 pgTAP structure, privilege, cross-tenant, identity-spoofing, assignment, transactional approval, exact permission replacement, workspace resolution, revocation-state preservation, lifecycle, M1 hardening, and authorization-resolver tests pass locally.
-- Database tests are split across identity/tenancy, M1 hardening, authorization-resolver, owner-onboarding control-plane, and post-approval workspace-control suites.
+- 90 pgTAP structure, privilege, cross-tenant, identity-spoofing, invitation forwarding, claim-without-activation, assignment, transactional approval, exact permission replacement, workspace resolution, suspension, revocation-state preservation, lifecycle, M1 hardening, and authorization-resolver tests pass locally.
+- Database tests are split across identity/tenancy, M1 hardening, authorization-resolver, owner-onboarding control-plane, post-approval workspace-control, and staff-invitation/access-management suites.
 - Docker Desktop, its WSL 2 backend, and the local Supabase stack are installed and verified on this machine.
-- `pnpm db:reset` applied all migrations successfully; `pnpm db:test` passed all 69 pgTAP tests; `pnpm db:lint` reported no schema errors; local security and performance advisors found no issues.
+- `pnpm db:reset` applied all migrations successfully; `pnpm db:test` passed all 90 pgTAP tests; `pnpm db:lint` reported no schema errors; local security and performance advisors found no issues.
 - Hosted deployment path: link the Supabase CLI to the approved cloud project, run `pnpm db:push`, configure Auth, then deploy the Next.js/PWA app to Vercel.
 - GitHub Actions CI runs web verification plus isolated Supabase reset, pgTAP, and database lint on a Docker-capable runner; actions are pinned to reviewed commit SHAs.
 

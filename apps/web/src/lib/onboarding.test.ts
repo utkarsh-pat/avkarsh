@@ -3,6 +3,7 @@ import {
   defaultRequestedPermissions,
   onboardingPermissions,
   onboardingSubmissionSchema,
+  propertyStaffPermissions,
 } from "./onboarding";
 
 const validSubmission = {
@@ -48,5 +49,12 @@ describe("owner onboarding contract", () => {
       roomCount: 0,
     }).success).toBe(false);
   });
-});
 
+  it("keeps property staff grants inside the operational permission boundary", () => {
+    const keys = propertyStaffPermissions.map(([key]) => key);
+    expect(keys).not.toContain("staff.manage");
+    expect(keys).not.toContain("organization.manage");
+    expect(keys).not.toContain("subscription.read");
+    expect(keys).not.toContain("property.settings");
+  });
+});

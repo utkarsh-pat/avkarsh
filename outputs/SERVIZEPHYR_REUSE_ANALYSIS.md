@@ -51,7 +51,9 @@ The following implementation details were not copied because they would weaken A
 6. Revocation suspends tenant visibility and memberships immediately; restoration returns the previous safe lifecycle and subscription state.
 7. After approval, the platform admin can replace the exact permission set and edit subscription terms without leaving a revoked tenant active by accident.
 8. The property workspace asks the database resolver for every module; route knowledge or client state cannot make an unapproved card active.
-9. Approval, rejection, control changes, revocation, and restoration write append-only audit events without credential or payment-secret payloads.
+9. A property owner can create a one-time staff invitation. The matching Google identity claims it, but no membership exists until the owner separately confirms that identity.
+10. Active property staff can be suspended or restored without changing organization-owner access or trusting client-side role state.
+11. Approval, rejection, invitation, identity claim, control changes, suspension, revocation, and restoration write append-only audit events without credential or payment-secret payloads.
 
 ## Remaining reuse candidates
 

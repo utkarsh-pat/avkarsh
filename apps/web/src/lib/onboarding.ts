@@ -33,6 +33,18 @@ export const onboardingPermissions = [
   ["subscription.read", "Subscription", "Plan and usage visibility"],
 ] as const;
 
+export const propertyStaffPermissions = onboardingPermissions.filter(([key]) => [
+  "dashboard.view",
+  "reservation.manage",
+  "guest.manage",
+  "stay.manage",
+  "folio.manage",
+  "payment.manage",
+  "reports.read",
+  "whatsapp.manage",
+  "audit.read",
+].includes(key));
+
 export const defaultRequestedPermissions = onboardingPermissions
   .map(([key]) => key)
   .filter((key) => !["payment.manage", "audit.read", "organization.manage"].includes(key));
@@ -66,4 +78,3 @@ export type OnboardingActionState = {
   message?: string;
   requestId?: string;
 };
-
