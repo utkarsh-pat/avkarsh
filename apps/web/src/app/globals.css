@@ -286,6 +286,8 @@ h2 { font-size: clamp(30px, 4vw, 48px); font-weight: 650; letter-spacing: -.04em
 .permission-check-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .permission-check { align-items: flex-start; border: 1px solid var(--hairline); border-radius: 10px; cursor: pointer; display: flex !important; gap: 12px !important; padding: 14px; }
 .permission-check:has(input:checked) { background: #eff6ff; border-color: #93c5fd; }
+.permission-check:hover { border-color: var(--primary); }
+.permission-check:focus-within { outline: 3px solid color-mix(in srgb, var(--focus) 24%, transparent); outline-offset: 2px; }
 .permission-check input { accent-color: var(--primary); height: 17px; margin-top: 2px; width: 17px; }
 .permission-check span { display: grid; gap: 4px; }
 .permission-check small { color: var(--body); font-weight: 450; line-height: 1.4; }
@@ -484,3 +486,62 @@ h2 { font-size: clamp(30px, 4vw, 48px); font-weight: 650; letter-spacing: -.04em
 :root[data-theme="dark"] input,
 :root[data-theme="dark"] select,
 :root[data-theme="dark"] textarea { background: var(--surface-subtle); border-color: var(--hairline); color: var(--ink); }
+
+/* Dark-mode component states. Keep interactive and semantic surfaces dark enough
+   to preserve readable text instead of inheriting their light-theme fills. */
+:root[data-theme="dark"] .permission-check {
+  background: color-mix(in srgb, var(--surface) 86%, var(--canvas));
+  border-color: var(--hairline);
+  color: var(--ink);
+}
+:root[data-theme="dark"] .permission-check:hover {
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  border-color: color-mix(in srgb, var(--primary) 72%, var(--hairline));
+}
+:root[data-theme="dark"] .permission-check:has(input:checked) {
+  background: color-mix(in srgb, var(--primary) 20%, var(--surface));
+  border-color: color-mix(in srgb, var(--primary) 78%, var(--hairline));
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+:root[data-theme="dark"] .permission-check:has(input:checked) small { color: var(--body); }
+
+:root[data-theme="dark"] .request-receipt,
+:root[data-theme="dark"] .live-admin-badge,
+:root[data-theme="dark"] .admin-stats div { background: var(--surface); }
+:root[data-theme="dark"] .registration-form input[readonly] { background: var(--surface-subtle); color: var(--body); }
+:root[data-theme="dark"] .locked-modules span,
+:root[data-theme="dark"] .requested-module-list span,
+:root[data-theme="dark"] .approved-permissions span,
+:root[data-theme="dark"] .status-pill.expired,
+:root[data-theme="dark"] .status-pill.suspended {
+  background: var(--surface-subtle);
+  color: var(--body);
+}
+:root[data-theme="dark"] .verified-identity,
+:root[data-theme="dark"] .status-pill.approved,
+:root[data-theme="dark"] .status-pill.active,
+:root[data-theme="dark"] .admin-action-message.success {
+  background: #16392f;
+  border-color: #236b55;
+  color: #86efac;
+}
+:root[data-theme="dark"] .verified-identity small { color: #86efac; }
+:root[data-theme="dark"] .status-pill.pending,
+:root[data-theme="dark"] .status-pill.under_review,
+:root[data-theme="dark"] .request-note {
+  background: #3b2c1f;
+  border-color: #7c4a1d;
+  color: #fdba74;
+}
+:root[data-theme="dark"] .status-pill.rejected,
+:root[data-theme="dark"] .status-pill.revoked,
+:root[data-theme="dark"] .rejection-summary,
+:root[data-theme="dark"] .admin-action-message.error,
+:root[data-theme="dark"] .form-message {
+  background: #3f222d;
+  border-color: #7f3345;
+  color: #fda4af;
+}
+:root[data-theme="dark"] .status-pill.claimed { background: #282c5b; color: #a5b4fc; }
+:root[data-theme="dark"] .button.danger { background: transparent; border-color: #9f4560; color: #fda4af; }
+:root[data-theme="dark"] .button.danger:hover { background: #3f222d; }
