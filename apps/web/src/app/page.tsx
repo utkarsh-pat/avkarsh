@@ -14,7 +14,8 @@ export default function Home() {
         </a>
         <nav className="topbar-actions" aria-label="Primary navigation">
           <a href="#foundation">How it works</a>
-          <a className="button primary compact" href="/sign-in">Sign in</a>
+          <a href="/register">Register property</a>
+          <a className="button primary compact" href="/sign-in?next=/app">Sign in</a>
         </nav>
       </header>
 
@@ -27,7 +28,7 @@ export default function Home() {
             staff, and audit workflows.
           </p>
           <div className="actions" aria-label="Project actions">
-            <a className="button primary" href="/sign-in">Get started</a>
+            <a className="button primary" href="/register">Register your property</a>
             <a className="button secondary" href="#foundation">Explore features</a>
           </div>
         </div>

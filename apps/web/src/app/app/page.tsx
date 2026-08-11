@@ -33,10 +33,16 @@ export default async function AppPage() {
 
   if (!claimsData?.claims) redirect("/sign-in");
 
-  const { data, error } = await supabase
-    .from("properties")
-    .select("id, name, code, timezone, currency_code")
-    .order("name", { ascending: true });
+  const [propertiesResult, platformAdminResult] = await Promise.all([
+    supabase
+      .from("properties")
+      .select("id, name, code, timezone, currency_code")
+      .order("name", { ascending: true }),
+    supabase
+      .from("platform_admins")
+      .select("profile_id")
+      .maybeSingle(),
+  ]);
 
   const email = typeof claimsData.claims.email === "string"
     ? claimsData.claims.email
@@ -45,8 +51,9 @@ export default async function AppPage() {
   return (
     <PropertyWorkspace
       email={email}
-      properties={(data ?? []) as PropertyScope[]}
-      loadError={error ? "Property access could not be loaded. Please try again." : undefined}
+      properties={(propertiesResult.data ?? []) as PropertyScope[]}
+      loadError={propertiesResult.error ? "Property access could not be loaded. Please try again." : undefined}
+      isPlatformAdmin={Boolean(platformAdminResult.data)}
     />
   );
 }

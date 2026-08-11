@@ -1,6 +1,3 @@
-"use client";
-
-import { useMemo, useState } from "react";
 import Link from "next/link";
 
 type PropertyScope = {
@@ -15,20 +12,18 @@ type PropertyWorkspaceProps = {
   email: string;
   properties: PropertyScope[];
   loadError?: string;
+  isPlatformAdmin?: boolean;
 };
 
-export function PropertyWorkspace({ email, properties, loadError }: PropertyWorkspaceProps) {
-  const [selectedId, setSelectedId] = useState(properties[0]?.id ?? "");
-  const selectedProperty = useMemo(
-    () => properties.find((property) => property.id === selectedId),
-    [properties, selectedId],
-  );
-
+export function PropertyWorkspace({ email, properties, loadError, isPlatformAdmin }: PropertyWorkspaceProps) {
   return (
     <main className="workspace-shell">
       <header className="workspace-topbar">
         <Link className="brand" href="/">Avkarsh</Link>
-        <p className="workspace-user">{email}</p>
+        <div className="workspace-header-actions">
+          {isPlatformAdmin ? <Link href="/admin/onboarding">Admin control plane</Link> : null}
+          <p className="workspace-user">{email}</p>
+        </div>
       </header>
       <section className="workspace-content" aria-labelledby="workspace-title">
         <p className="eyebrow">PROPERTY WORKSPACE</p>
@@ -42,41 +37,24 @@ export function PropertyWorkspace({ email, properties, loadError }: PropertyWork
 
         {properties.length > 0 ? (
           <ul className="property-grid" aria-label="Available properties">
-            {properties.map((property) => {
-              const isSelected = property.id === selectedId;
-
-              return (
-                <li key={property.id}>
-                <button
-                  aria-pressed={isSelected}
-                  className={`property-card${isSelected ? " selected" : ""}`}
-                  onClick={() => setSelectedId(property.id)}
-                >
+            {properties.map((property) => (
+              <li key={property.id}>
+                <Link className="property-card" href={`/app/property/${property.id}`}>
                   <span className="index">{property.code}</span>
                   <strong>{property.name}</strong>
                   <span>{property.timezone} · {property.currency_code}</span>
-                </button>
-                </li>
-              );
-            })}
+                  <span className="property-card-action">Open workspace →</span>
+                </Link>
+              </li>
+            ))}
           </ul>
         ) : (
           <section className="empty-state" aria-labelledby="empty-title">
             <h2 id="empty-title">No active property access yet.</h2>
-            <p>Ask an organization administrator to activate your property membership.</p>
+            <p>Ask an organization administrator to activate your property membership, or submit a new property request.</p>
+            <Link className="button primary" href="/register">Register a property</Link>
           </section>
         )}
-
-        {selectedProperty ? (
-          <section className="selection-panel" aria-live="polite">
-            <p className="eyebrow">ACTIVE SELECTION</p>
-            <h2>{selectedProperty.name}</h2>
-            <p>
-              Operational modules will become available here after the M1 authorization resolver
-              and property context command flow are complete.
-            </p>
-          </section>
-        ) : null}
       </section>
     </main>
   );

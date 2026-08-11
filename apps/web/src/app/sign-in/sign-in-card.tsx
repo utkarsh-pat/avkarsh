@@ -10,7 +10,7 @@ const errorCopy: Record<string, string> = {
   exchange: "We could not complete your sign-in. Please try again.",
 };
 
-export function SignInCard({ error }: { error?: string }) {
+export function SignInCard({ error, next = "/app" }: { error?: string; next?: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState(error ? errorCopy[error] : undefined);
 
@@ -23,7 +23,7 @@ export function SignInCard({ error }: { error?: string }) {
       const { error: signInError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
         },
       });
 
@@ -54,6 +54,8 @@ export function SignInCard({ error }: { error?: string }) {
           By continuing, you acknowledge that access is limited by your active organization,
           property assignment, role, and tenant lifecycle.
         </p>
+        <div className="sign-in-divider"><span>New to Avkarsh?</span></div>
+        <Link className="button secondary sign-in-register" href="/register">Register a property</Link>
       </section>
     </main>
   );
