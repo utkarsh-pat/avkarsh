@@ -5,6 +5,10 @@ import { getSupabasePublicConfig } from "@/lib/supabase/config";
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const requestedNext = requestUrl.searchParams.get("next");
+  const safeNext = requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
+    ? requestedNext
+    : "/app";
   const configured = getSupabasePublicConfig();
 
   if (!configured) {
@@ -15,7 +19,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/sign-in?error=callback", requestUrl.origin));
   }
 
-  const response = NextResponse.redirect(new URL("/", requestUrl.origin));
+  const response = NextResponse.redirect(new URL(safeNext, requestUrl.origin));
   const supabase = createServerClient(configured.url, configured.publishableKey, {
     cookies: {
       getAll() {
@@ -40,6 +44,10 @@ export async function GET(request: Request) {
   if (error) {
     return NextResponse.redirect(new URL("/sign-in?error=exchange", requestUrl.origin));
   }
+
+  // An anonymous owner request is claimable only after Supabase has verified the
+  // same email through OAuth. A claim failure must not invalidate sign-in.
+  await supabase.rpc("claim_approved_onboarding_requests");
 
   return response;
 }
