@@ -1,55 +1,60 @@
 **Comparison Target**
 
-- Source visual truth: `C:\Users\utkar\AppData\Local\Temp\codex-clipboard-0b279d0c-8aff-4277-9e78-9116938f15a2.png`
-- Rendered implementation: `S:\avkarsh-main\.codex-artifacts\dark-registration-viewport.png`
-- Lower-form evidence: `S:\avkarsh-main\.codex-artifacts\dark-registration-lower.png`
-- Side-by-side comparison: `S:\avkarsh-main\.codex-artifacts\dark-mode-comparison.png`
-- Route/state: `/register`, anonymous visitor, Property owner selected, dark theme.
-- Source pixels: 1917 x 881. Implementation pixels and CSS viewport: 1280 x 720 at 1x density.
-- Normalization: the source was center-cropped to the implementation's 16:9 viewport and resized to 1280 x 720; the implementation remained at native 1280 x 720. The source is the reported failure state, not a content target: the customer module-selection region was intentionally removed by the clarified product requirement.
+- Source visual truth: `C:\Users\utkar\AppData\Local\Temp\codex-clipboard-e8a3539a-f755-428d-b75f-3131a7686849.png`
+- Rendered implementation: `S:\avkarsh-main\.codex-artifacts\avkarsh-admin-dashboard-fixed.png`
+- Side-by-side comparison: `S:\avkarsh-main\.codex-artifacts\dashboard-reference-vs-avkarsh.png`
+- Mobile evidence: `S:\avkarsh-main\.codex-artifacts\avkarsh-admin-mobile-menu-open.png`
+- Route/state: production `/admin`, authenticated as `ceoutkarshpatel@gmail.com`, platform super admin, dark theme.
+- Source pixels: 1917 x 1021. Implementation capture: 1918 x 1022 at 1x density with a 1917 x 1021 normalized comparison crop.
 
 **Findings**
 
-- No actionable P0/P1/P2 findings remain. The old near-white selected module cards are absent from the customer journey, all remaining form surfaces use dark-theme tokens, and labels, placeholders, borders, primary action, and explanatory copy remain readable.
+- The first production capture exposed a P1 desktop grid-placement defect: the mobile scrim occupied the first grid cell, pushing the sidebar into the content column and the stage below the viewport.
+- The base scrim state now uses `display: none`; desktop geometry is verified at sidebar x=0, width=286 and stage x=286, width=1631.6 with no horizontal overflow.
+- No actionable P0/P1/P2 visual findings remain in the inspected desktop and mobile admin shell states.
 
 **Required Fidelity Surfaces**
 
-- Fonts and typography: the existing Avkarsh type family, weight hierarchy, line height, and letter spacing are preserved. Headline, legends, labels, optional hints, and CTA text remain visually distinct without clipping in the inspected desktop viewport.
-- Spacing and layout rhythm: the existing centered content width, two-column field grids, section gaps, padding, borders, and radii remain consistent. Removing commercial/module questions produces a shorter three-step enquiry without leaving an empty region.
-- Colors and visual tokens: canvas, fieldsets, inputs, borders, muted text, accent text, and CTA use the existing dark palette. The light-theme fills that caused the reported low-contrast state no longer appear in this journey; semantic admin/status surfaces also have explicit dark-theme overrides.
-- Image quality and asset fidelity: this screen contains no photography, illustrations, or raster product assets. The Avkarsh wordmark remains text-based as in the existing product; no source asset was replaced or approximated.
-- Copy and content: customer-facing copy now asks only for identity, property details, and optional context. It explicitly explains that access and commercial terms are configured after discussion. Plan preference and workspace module selection are not exposed to the applicant.
+- Structure: the result matches the ServiZephyr control-panel pattern with a fixed left rail, sticky top bar, active navigation treatment, six KPI cards, two primary dashboard panels, and an operational health strip.
+- Typography: the existing Avkarsh Geist typography and hierarchy are preserved while matching the source's compact admin density, strong page heading, muted supporting copy, and tabular KPI values.
+- Color: ServiZephyr's black/yellow layout language is translated into Avkarsh's indigo brand system. Dark semantic surfaces, borders, status accents, selected navigation, and focus states remain legible without light-theme leakage.
+- Spacing: the 286px desktop rail, 72px top bar, card rhythm, panel gutters, and table/feed density align with the source's information architecture while accommodating hotel-specific modules.
+- Icons and assets: Lucide icons replace the source icon set with equivalent real library assets. No handcrafted SVG, emoji placeholder, or fake raster asset is used.
+- Content: restaurant orders/revenue are intentionally replaced with owner approvals, hotel listings, guests, cases, WhatsApp demand, incidents, and audit activity.
 
 **Interaction and Runtime Checks**
 
-- Tested relationship selection and return-to-relationship affordance.
-- Tested light-to-dark theme switching and confirmed `data-theme="dark"`.
-- Confirmed the rendered form contains exactly three sections and no plan or module controls.
-- Inspected both the upper and lower form regions, including terms and the submit action.
-- Did not submit the form, avoiding creation of a fake hosted onboarding request.
-- No console entries originated from the Avkarsh preview deployment during the inspected flow.
+- Verified authenticated production access and platform-admin identity for `ceoutkarshpatel@gmail.com`.
+- Tested sidebar collapse and restore: grid transitions from 286px to 82px and back.
+- Tested dark/light switching and restored dark mode after validation.
+- Tested navigation to Users, WhatsApp Direct, and System Incidents; server-rendered empty states and headings loaded correctly.
+- Verified WhatsApp and incident empty states accurately explain the next operational dependency.
+- Checked browser console warnings/errors after route navigation: none.
+- Verified mobile at 390 x 844: no horizontal page overflow, closed drawer by default, working menu open state, full navigation, scrim, and close control.
 
 **Focused Region Evidence**
 
-- The upper viewport capture is sufficient for headline, section legends, labels, inputs, borders, and two-column rhythm at readable scale.
-- `dark-registration-lower.png` separately verifies readonly/default fields, textarea, terms checkbox, explanatory copy, and primary submit treatment. No additional crop was needed.
+- The full side-by-side desktop comparison covers navigation rail, top bar, heading, KPI density, panel structure, footer identity, and theme control at equivalent source/implementation dimensions.
+- The mobile drawer capture separately verifies responsive navigation, menu density, overlay behavior, and touch-width layout.
+- Computed layout measurements were used alongside screenshots to confirm that the corrected columns occupy the intended coordinates.
 
 **Comparison History**
 
-1. Earlier P1: selected workspace-module cards inherited near-white light-theme fills in dark mode, making their pale labels effectively unreadable. The form also required hotel owners to make plan and RBAC decisions during a first enquiry.
-2. Fix: removed plan preference and module selection from the applicant form; stored `pending_admin_review` with an empty requested-permission set; moved explicit plan/permission choice to admin approval; added explicit dark-theme styles for remaining semantic surfaces.
-3. Post-fix evidence: the side-by-side comparison shows the problematic module grid is gone and the replacement three-step property enquiry renders on consistent dark surfaces. Upper and lower browser captures show no remaining contrast or layout regression.
+1. Source: ServiZephyr dashboard supplied the approved navigation, top-bar, KPI, and operational-panel reference.
+2. First implementation capture: desktop scrim participated in CSS Grid, causing the rail and stage to occupy incorrect cells.
+3. Fix: hid the scrim in the base desktop state while preserving its mobile media-query behavior.
+4. Final production capture: two-column geometry, dashboard hierarchy, dark-theme contrast, and responsive drawer all pass.
 
 **Implementation Checklist**
 
-- [x] Keep the owner enquiry limited to contact, property, and optional context.
-- [x] Defer plan, pricing, limits, and RBAC permissions to platform-admin review.
-- [x] Require an explicit plan and at least one permission before approval.
-- [x] Preserve rejection without requiring commercial fields.
-- [x] Verify dark-theme upper and lower form regions in the deployed preview.
+- [x] Reuse ServiZephyr's proven admin information architecture.
+- [x] Adapt modules and copy to hotel operations.
+- [x] Preserve Avkarsh theme tokens and dark/light modes.
+- [x] Verify desktop, collapsed sidebar, route navigation, console state, and mobile drawer.
+- [x] Validate the source and production implementation together at the same desktop viewport.
 
 **Follow-up Polish**
 
-- None required for this change. Mobile/browser-specific visual regression coverage can be added later as automated screenshot testing.
+- Live Meta WhatsApp Cloud API credentials, webhook ingestion, and outbound send jobs remain the next integration phase; this delivery establishes the permissioned database and inbox UI foundation.
 
 final result: passed
