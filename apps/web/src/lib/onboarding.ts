@@ -45,10 +45,6 @@ export const propertyStaffPermissions = onboardingPermissions.filter(([key]) => 
   "audit.read",
 ].includes(key));
 
-export const defaultRequestedPermissions = onboardingPermissions
-  .map(([key]) => key)
-  .filter((key) => !["payment.manage", "audit.read", "organization.manage"].includes(key));
-
 const phoneSchema = z.string().trim().min(8).max(24).regex(/^[+0-9][0-9 ()-]+$/);
 
 export const onboardingSubmissionSchema = z.object({
@@ -67,8 +63,8 @@ export const onboardingSubmissionSchema = z.object({
   countryCode: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/),
   timezone: z.string().trim().min(3).max(64),
   currencyCode: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/),
-  requestedPlan: z.enum(["trial", "starter", "growth", "enterprise"]),
-  requestedPermissions: z.array(z.enum(onboardingPermissions.map(([key]) => key))).min(1),
+  requestedPlan: z.enum(["pending_admin_review", "trial", "starter", "growth", "enterprise"]),
+  requestedPermissions: z.array(z.enum(onboardingPermissions.map(([key]) => key))),
   notes: z.union([z.string().trim().min(3).max(1000), z.literal("")]).optional(),
   termsAccepted: z.literal("on"),
 });

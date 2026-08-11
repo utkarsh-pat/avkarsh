@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import {
-  defaultRequestedPermissions,
-  onboardingPermissions,
   propertyTypes,
   requesterKinds,
   type OnboardingActionState,
@@ -139,32 +137,18 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
             <label>Country code<input name="countryCode" defaultValue="IN" maxLength={2} required /></label>
             <label>Timezone<input name="timezone" defaultValue="Asia/Kolkata" required /></label>
             <label>Currency<input name="currencyCode" defaultValue="INR" maxLength={3} required /></label>
-            <label>Plan preference<select name="requestedPlan" defaultValue="trial"><option value="trial">Start with trial</option><option value="starter">Starter</option><option value="growth">Growth</option><option value="enterprise">Enterprise</option></select></label>
           </div>
         </fieldset>
 
         <fieldset>
-          <legend><span>03</span> Workspace modules</legend>
-          <p className="fieldset-copy">Request what you expect to use. The platform admin will confirm the final least-privilege set before approval.</p>
-          <div className="permission-check-grid">
-            {onboardingPermissions.map(([key, label, copy]) => (
-              <label className="permission-check" key={key}>
-                <input type="checkbox" name="requestedPermissions" value={key} defaultChecked={defaultRequestedPermissions.includes(key)} />
-                <span><strong>{label}</strong><small>{copy}</small></span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend><span>04</span> Final context</legend>
+          <legend><span>03</span> Final context</legend>
           <label>Anything the review team should know? <small>optional</small><textarea name="notes" rows={4} maxLength={1000} placeholder="Opening date, multiple properties, migration requirements, or WhatsApp workflow…" /></label>
           <label className="terms-check"><input type="checkbox" name="termsAccepted" required /><span>I confirm these details are accurate and understand that access starts only after platform review.</span></label>
         </fieldset>
 
         {state.status === "error" ? <p className="form-message" role="alert">{state.message}</p> : null}
         <div className="registration-submit-row">
-          <p>Approval creates the organization, first property, owner role, permissions, and subscription together.</p>
+          <p>Our team will discuss your needs, then configure the right access and commercial terms before approval.</p>
           <button className="button primary" disabled={isPending}>{isPending ? "Submitting securely…" : "Submit for review"}</button>
         </div>
       </form>

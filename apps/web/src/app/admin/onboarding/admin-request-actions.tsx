@@ -23,6 +23,8 @@ export function PendingRequestActions({
   currencyCode: string;
 }) {
   const [state, action, pending] = useActionState(reviewOnboardingRequest, initialState);
+  const planOptions = ["trial", "starter", "growth", "enterprise"];
+  const initialPlan = planOptions.includes(requestedPlan) ? requestedPlan : "";
 
   return (
     <form action={action} className="admin-review-form">
@@ -38,7 +40,7 @@ export function PendingRequestActions({
       <section>
         <h4>Subscription and limits</h4>
         <div className="admin-form-grid">
-          <label>Plan<select name="plan" defaultValue={requestedPlan}><option value="trial">Trial</option><option value="starter">Starter</option><option value="growth">Growth</option><option value="enterprise">Enterprise</option></select></label>
+          <label>Plan<select name="plan" defaultValue={initialPlan} required><option value="" disabled>Choose after discussion</option><option value="trial">Trial</option><option value="starter">Starter</option><option value="growth">Growth</option><option value="enterprise">Enterprise</option></select></label>
           <label>Billing<select name="billingCycle" defaultValue="monthly"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="annual">Annual</option><option value="custom">Custom</option></select></label>
           <label>Amount <small>major units</small><input name="amountRupees" type="number" min="0" step="0.01" defaultValue="0" /></label>
           <label>Currency<input name="currencyCode" maxLength={3} defaultValue={currencyCode} /></label>
@@ -50,7 +52,7 @@ export function PendingRequestActions({
       <label>Review reason or internal note<textarea name="reason" rows={3} maxLength={500} placeholder="Why this permission and plan set is appropriate…" /></label>
       {state.message ? <p className={`admin-action-message ${state.status}`} role={state.status === "error" ? "alert" : "status"}>{state.message}</p> : null}
       <div className="admin-action-row">
-        <button className="button danger" name="decision" value="reject" disabled={pending}>Reject request</button>
+        <button className="button danger" name="decision" value="reject" formNoValidate disabled={pending}>Reject request</button>
         <button className="button primary" name="decision" value="approve" disabled={pending}>{pending ? "Processing…" : "Approve and provision"}</button>
       </div>
     </form>
