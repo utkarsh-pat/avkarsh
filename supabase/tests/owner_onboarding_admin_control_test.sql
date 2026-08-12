@@ -17,6 +17,9 @@ select ok(
 select ok(
   not has_table_privilege('anon', 'public.onboarding_requests', 'SELECT')
   and has_column_privilege('anon', 'public.onboarding_requests', 'contact_email', 'INSERT')
+  and has_column_privilege('anon', 'public.onboarding_requests', 'latitude', 'INSERT')
+  and has_column_privilege('anon', 'public.onboarding_requests', 'longitude', 'INSERT')
+  and has_column_privilege('anon', 'public.onboarding_requests', 'inventory_unit', 'INSERT')
   and not has_column_privilege('anon', 'public.onboarding_requests', 'status', 'UPDATE'),
   'anonymous applicants can submit but cannot read or process requests'
 );
