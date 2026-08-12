@@ -1,5 +1,7 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+
 type Theme = "light" | "dark";
 
 function currentTheme(): Theme {
@@ -7,6 +9,11 @@ function currentTheme(): Theme {
 }
 
 export function ThemeToggle() {
+  const pathname = usePathname();
+
+  // The admin shell already provides a theme control in its top bar.
+  if (pathname.startsWith("/admin")) return null;
+
   function toggleTheme() {
     const next = currentTheme() === "dark" ? "light" : "dark";
     document.documentElement.dataset.theme = next;
