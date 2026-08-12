@@ -6,6 +6,7 @@ import { useActionState, useState } from "react";
 import {
   propertyTypes,
   requesterKinds,
+  sanitizePhoneInput,
   type OnboardingActionState,
 } from "@/lib/onboarding";
 import { submitOnboardingRequest } from "./actions";
@@ -135,8 +136,8 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
           <div className="form-grid two-column">
             <label>Full name<input name="contactName" defaultValue={identity?.name} required minLength={2} maxLength={120} autoComplete="name" /></label>
             <label>Email address<input name="contactEmail" type="email" defaultValue={identity?.email} readOnly={Boolean(identity)} required autoComplete="email" /></label>
-            <label>Phone number<input name="contactPhone" type="tel" placeholder="+91 98765 43210" required autoComplete="tel" /></label>
-            <label>WhatsApp number <small>optional</small><input name="whatsappPhone" type="tel" placeholder="Same or another number" /></label>
+            <label>Phone number<input name="contactPhone" type="tel" inputMode="tel" pattern="[+0-9][0-9 ()-]{7,23}" title="Enter 8 to 24 digits with an optional leading +, spaces, brackets, or hyphens." placeholder="+91 98765 43210" required minLength={8} maxLength={24} autoComplete="tel" onInput={(event) => { event.currentTarget.value = sanitizePhoneInput(event.currentTarget.value); }} /></label>
+            <label>WhatsApp number <small>optional</small><input name="whatsappPhone" type="tel" inputMode="tel" pattern="[+0-9][0-9 ()-]{7,23}" title="Enter 8 to 24 digits with an optional leading +, spaces, brackets, or hyphens." placeholder="Same or another number" minLength={8} maxLength={24} onInput={(event) => { event.currentTarget.value = sanitizePhoneInput(event.currentTarget.value); }} /></label>
           </div>
         </fieldset>
 
