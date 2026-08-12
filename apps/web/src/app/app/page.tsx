@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { shouldStartOnboarding } from "@/lib/app-entry";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PropertyWorkspace } from "./property-workspace";
@@ -48,12 +49,23 @@ export default async function AppPage() {
     ? claimsData.claims.email
     : "Management user";
 
+  const properties = (propertiesResult.data ?? []) as PropertyScope[];
+  const isPlatformAdmin = Boolean(platformAdminResult.data);
+
+  if (shouldStartOnboarding({
+    propertyCount: properties.length,
+    isPlatformAdmin,
+    propertyAccessFailed: Boolean(propertiesResult.error),
+  })) {
+    redirect("/register");
+  }
+
   return (
     <PropertyWorkspace
       email={email}
-      properties={(propertiesResult.data ?? []) as PropertyScope[]}
+      properties={properties}
       loadError={propertiesResult.error ? "Property access could not be loaded. Please try again." : undefined}
-      isPlatformAdmin={Boolean(platformAdminResult.data)}
+      isPlatformAdmin={isPlatformAdmin}
     />
   );
 }

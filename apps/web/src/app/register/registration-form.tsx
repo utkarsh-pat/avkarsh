@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRight, BriefcaseBusiness, Building2, Handshake, Users } from "lucide-react";
 import { useActionState, useState } from "react";
 import {
   propertyTypes,
@@ -24,12 +25,19 @@ type RegistrationFormProps = {
 
 const initialState: OnboardingActionState = { status: "idle" };
 
+const requesterIcons = {
+  property_owner: Building2,
+  company_operator: BriefcaseBusiness,
+  implementation_partner: Handshake,
+  property_staff: Users,
+} as const;
+
 function formatStatus(status: string) {
   return status.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
 }
 
 export function RegistrationForm({ identity, existingRequests }: RegistrationFormProps) {
-  const [requesterKind, setRequesterKind] = useState(identity ? "property_owner" : "");
+  const [requesterKind, setRequesterKind] = useState("");
   const [state, formAction, isPending] = useActionState(submitOnboardingRequest, initialState);
 
   if (state.status === "success") {
@@ -57,16 +65,34 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
     return (
       <section className="identity-step" aria-labelledby="identity-step-title">
         <p className="eyebrow">BEFORE WE BEGIN</p>
-        <h1 id="identity-step-title">How are you connected to the property?</h1>
-        <p className="registration-lede">Choose your relationship first. We will ask only for the details needed for that access request.</p>
+        <h1 id="identity-step-title">First, tell us who you are.</h1>
+        <p className="registration-lede">Choose your role first. We will then ask only for the property details relevant to your request.</p>
+        {identity ? (
+          <div className="role-identity" aria-label="Signed-in identity">
+            <span aria-hidden="true">✓</span>
+            <div><strong>{identity.name || "Signed-in user"}</strong><small>{identity.email}</small></div>
+          </div>
+        ) : null}
+        {existingRequests.length > 0 ? (
+          <aside className="existing-requests role-step-requests" aria-label="Your existing requests">
+            <strong>Your recent requests</strong>
+            {existingRequests.map((request) => (
+              <span key={request.id}>{request.property_name} · {formatStatus(request.status)}{request.approved_plan ? ` · ${request.approved_plan}` : ""}</span>
+            ))}
+          </aside>
+        ) : null}
         <div className="identity-grid">
-          {requesterKinds.map((kind) => (
-            <button className="identity-option" key={kind.value} onClick={() => setRequesterKind(kind.value)}>
-              <span>{kind.label}</span>
-              <small>{kind.copy}</small>
-              <strong aria-hidden="true">→</strong>
-            </button>
-          ))}
+          {requesterKinds.map((kind) => {
+            const RoleIcon = requesterIcons[kind.value];
+            return (
+              <button className="identity-option" type="button" key={kind.value} onClick={() => setRequesterKind(kind.value)}>
+                <span className="identity-option-icon" aria-hidden="true"><RoleIcon size={22} strokeWidth={1.8} /></span>
+                <span className="identity-option-label">{kind.label}</span>
+                <small>{kind.copy}</small>
+                <ArrowRight className="identity-option-arrow" size={20} aria-hidden="true" />
+              </button>
+            );
+          })}
         </div>
         <p className="existing-user-copy">Already approved? <Link href="/sign-in?next=/app">Sign in to your workspace</Link></p>
       </section>
