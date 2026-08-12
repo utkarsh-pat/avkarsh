@@ -3,6 +3,7 @@ import {
   onboardingPermissions,
   onboardingSubmissionSchema,
   propertyStaffPermissions,
+  sanitizePhoneInput,
 } from "./onboarding";
 
 const validSubmission = {
@@ -39,6 +40,18 @@ describe("owner onboarding contract", () => {
     expect(parsed.countryCode).toBe("IN");
     expect(parsed.currencyCode).toBe("INR");
     expect(parsed.roomCount).toBe(24);
+  });
+
+  it("removes letters and misplaced plus signs from phone input", () => {
+    expect(sanitizePhoneInput("abc+91 98call765-43210")).toBe("+91 98765-43210");
+    expect(sanitizePhoneInput("+91 (98765) 43210 ext 5")).toBe("+91 (98765) 43210  5");
+  });
+
+  it("rejects alphabetic phone values at the server boundary", () => {
+    expect(onboardingSubmissionSchema.safeParse({
+      ...validSubmission,
+      contactPhone: "call-me-now",
+    }).success).toBe(false);
   });
 
   it("defers commercial decisions while rejecting implausible inventory", () => {
