@@ -268,7 +268,8 @@ h2 { font-size: clamp(30px, 4vw, 48px); font-weight: 650; letter-spacing: -.04em
 .country-picker { border-right: 1px solid var(--hairline); position: static; }
 .country-picker summary { align-items: center; cursor: pointer; display: flex; gap: 7px; height: 100%; justify-content: center; list-style: none; min-width: 108px; padding: 0 12px; user-select: none; }
 .country-picker summary::-webkit-details-marker { display: none; }
-.country-flag { font-size: 20px; line-height: 1; }
+.country-flag { align-items: center; background: var(--surface-subtle); border: 1px solid var(--hairline); border-radius: 3px; display: inline-flex; font-size: 8px; font-weight: 800; height: 18px; justify-content: center; line-height: 1; overflow: hidden; position: relative; width: 26px; }
+.country-flag img { height: 100%; inset: 0; object-fit: cover; position: absolute; width: 100%; }
 .country-menu { background: var(--surface); border: 1px solid var(--hairline); border-radius: 14px; box-shadow: 0 22px 55px rgba(10, 20, 50, .24); left: 0; overflow: hidden; position: absolute; top: calc(100% + 7px); width: min(360px, calc(100vw - 48px)); z-index: 30; }
 .country-search { align-items: center; border-bottom: 1px solid var(--hairline); display: flex; gap: 8px; padding: 10px; }
 .country-search input { background: var(--canvas); border: 1px solid var(--hairline); border-radius: 9px; flex: 1; min-width: 0; padding: 10px; }

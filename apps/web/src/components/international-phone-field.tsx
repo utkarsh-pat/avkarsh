@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown, Search } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CountryCode } from "libphonenumber-js";
 import {
@@ -18,6 +19,23 @@ type InternationalPhoneFieldProps = {
   name: string;
   optional?: boolean;
 };
+
+function CountryFlag({ country }: { country: ReturnType<typeof getPhoneCountry> }) {
+  return (
+    <span className="country-flag" aria-hidden="true">
+      <span>{country.iso}</span>
+      <Image
+        src={country.flagUrl}
+        alt=""
+        width={40}
+        height={30}
+        loading="lazy"
+        unoptimized
+        onError={(event) => { event.currentTarget.style.display = "none"; }}
+      />
+    </span>
+  );
+}
 
 export function InternationalPhoneField({ label, name, optional = false }: InternationalPhoneFieldProps) {
   const [countryIso, setCountryIso] = useState<CountryCode>(defaultPhoneCountry);
@@ -50,7 +68,7 @@ export function InternationalPhoneField({ label, name, optional = false }: Inter
       <div className={`international-phone-control${error ? " invalid" : ""}`}>
         <details className="country-picker" ref={pickerRef}>
           <summary aria-label={`Country code: ${country.name} +${country.dialCode}`}>
-            <span className="country-flag" aria-hidden="true">{country.flag}</span>
+            <CountryFlag country={country} />
             <span>+{country.dialCode}</span>
             <ChevronDown size={15} aria-hidden="true" />
           </summary>
@@ -72,7 +90,7 @@ export function InternationalPhoneField({ label, name, optional = false }: Inter
                     pickerRef.current?.removeAttribute("open");
                   }}
                 >
-                  <span className="country-flag" aria-hidden="true">{option.flag}</span>
+                  <CountryFlag country={option} />
                   <span>{option.name}</span>
                   <small>+{option.dialCode}</small>
                 </button>
