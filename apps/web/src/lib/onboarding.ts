@@ -43,13 +43,7 @@ export const propertyStaffPermissions = onboardingPermissions.filter(([key]) => 
   "audit.read",
 ].includes(key));
 
-const phoneSchema = z.string().trim().min(8).max(24).regex(/^[+0-9][0-9 ()-]+$/);
-
-export function sanitizePhoneInput(value: string) {
-  const allowedCharacters = value.replace(/[^0-9+ ()-]/g, "");
-  const digitsAndFormatting = allowedCharacters.replaceAll("+", "");
-  return `${allowedCharacters.startsWith("+") ? "+" : ""}${digitsAndFormatting}`.slice(0, 24);
-}
+const phoneSchema = z.string().trim().regex(/^\+[1-9]\d{7,14}$/);
 
 export const onboardingSubmissionSchema = z.object({
   requesterKind: z.enum(requesterKinds.map(({ value }) => value)),

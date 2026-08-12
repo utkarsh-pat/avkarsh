@@ -3,14 +3,14 @@ import {
   onboardingPermissions,
   onboardingSubmissionSchema,
   propertyStaffPermissions,
-  sanitizePhoneInput,
 } from "./onboarding";
+import { buildE164Phone, isPossiblePhone, sanitizeNationalPhone } from "./phone";
 
 const validSubmission = {
   requesterKind: "property_owner",
   contactName: "Asha Sharma",
   contactEmail: "ASHA@EXAMPLE.COM",
-  contactPhone: "+91 98765 43210",
+  contactPhone: "+919876543210",
   whatsappPhone: "",
   organizationName: "Asha Hotels",
   propertyName: "Asha Residency",
@@ -42,9 +42,11 @@ describe("owner onboarding contract", () => {
     expect(parsed.roomCount).toBe(24);
   });
 
-  it("removes letters and misplaced plus signs from phone input", () => {
-    expect(sanitizePhoneInput("abc+91 98call765-43210")).toBe("+91 98765-43210");
-    expect(sanitizePhoneInput("+91 (98765) 43210 ext 5")).toBe("+91 (98765) 43210  5");
+  it("composes country-aware E.164 phone numbers", () => {
+    expect(sanitizeNationalPhone("98call765-43210")).toBe("9876543210");
+    expect(isPossiblePhone("IN", "9876543210")).toBe(true);
+    expect(buildE164Phone("IN", "9876543210")).toBe("+919876543210");
+    expect(buildE164Phone("US", "2025550123")).toBe("+12025550123");
   });
 
   it("rejects alphabetic phone values at the server boundary", () => {
