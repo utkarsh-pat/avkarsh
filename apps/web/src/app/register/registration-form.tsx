@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { ArrowRight, BriefcaseBusiness, Building2, Link2 } from "lucide-react";
 import { useActionState, useState } from "react";
-import { InternationalPhoneField } from "@/components/international-phone-field";
+import {
+  emptyInternationalPhone,
+  InternationalPhoneField,
+  type InternationalPhoneValue,
+} from "@/components/international-phone-field";
 import {
   propertyTypes,
   requesterKinds,
@@ -37,6 +41,9 @@ function formatStatus(status: string) {
 
 export function RegistrationForm({ identity, existingRequests }: RegistrationFormProps) {
   const [requesterKind, setRequesterKind] = useState("");
+  const [contactPhone, setContactPhone] = useState<InternationalPhoneValue>(emptyInternationalPhone);
+  const [whatsappPhone, setWhatsappPhone] = useState<InternationalPhoneValue>(emptyInternationalPhone);
+  const [sameWhatsappNumber, setSameWhatsappNumber] = useState(false);
   const [state, formAction, isPending] = useActionState(submitOnboardingRequest, initialState);
 
   if (state.status === "success") {
@@ -136,8 +143,25 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
           <div className="form-grid two-column">
             <label>Full name<input name="contactName" defaultValue={identity?.name} required minLength={2} maxLength={120} autoComplete="name" /></label>
             <label>Email address<input name="contactEmail" type="email" defaultValue={identity?.email} readOnly={Boolean(identity)} required autoComplete="email" /></label>
-            <InternationalPhoneField label="Phone number" name="contactPhone" />
-            <InternationalPhoneField label="WhatsApp number" name="whatsappPhone" optional />
+            <InternationalPhoneField label="Phone number" name="contactPhone" value={contactPhone} onValueChange={setContactPhone} />
+            <div className="phone-with-copy">
+              <InternationalPhoneField
+                label="WhatsApp number"
+                name="whatsappPhone"
+                optional
+                disabled={sameWhatsappNumber}
+                value={sameWhatsappNumber ? contactPhone : whatsappPhone}
+                onValueChange={setWhatsappPhone}
+              />
+              <label className="same-phone-check">
+                <input
+                  type="checkbox"
+                  checked={sameWhatsappNumber}
+                  onChange={(event) => setSameWhatsappNumber(event.target.checked)}
+                />
+                <span>Same as phone number</span>
+              </label>
+            </div>
           </div>
         </fieldset>
 
