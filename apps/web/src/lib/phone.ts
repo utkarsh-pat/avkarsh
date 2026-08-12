@@ -15,19 +15,15 @@ export type PhoneCountry = {
   iso: CountryCode;
   name: string;
   dialCode: string;
-  flag: string;
+  flagUrl: string;
 };
-
-function countryFlag(iso: CountryCode) {
-  return [...iso].map((character) => String.fromCodePoint(127397 + character.charCodeAt(0))).join("");
-}
 
 export const phoneCountries: PhoneCountry[] = getCountries()
   .map((iso) => ({
     iso,
     name: regionNames.of(iso) ?? iso,
     dialCode: getCountryCallingCode(iso),
-    flag: countryFlag(iso),
+    flagUrl: `https://flagcdn.com/w40/${iso.toLowerCase()}.png`,
   }))
   .sort((left, right) => {
     if (left.iso === defaultPhoneCountry) return -1;
