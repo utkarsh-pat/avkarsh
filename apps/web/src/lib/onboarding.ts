@@ -55,6 +55,8 @@ export const onboardingSubmissionSchema = z.object({
   propertyName: z.string().trim().min(2).max(160),
   propertyType: z.enum(propertyTypes.map(([value]) => value)),
   roomCount: z.coerce.number().int().min(1).max(10000),
+  latitude: z.coerce.number().min(-90).max(90),
+  longitude: z.coerce.number().min(-180).max(180),
   addressLine: z.string().trim().min(5).max(300),
   city: z.string().trim().min(2).max(120),
   stateRegion: z.string().trim().min(2).max(120),

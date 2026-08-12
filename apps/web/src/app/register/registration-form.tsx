@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { ArrowRight, BriefcaseBusiness, Building2, Link2 } from "lucide-react";
 import { useActionState, useState } from "react";
 import {
@@ -14,6 +15,9 @@ import {
   type OnboardingActionState,
 } from "@/lib/onboarding";
 import { submitOnboardingRequest } from "./actions";
+import type { PropertyLocation } from "@/components/property-location-picker";
+
+const PropertyLocationPicker = dynamic(() => import("@/components/property-location-picker"), { ssr: false });
 
 type ExistingRequest = {
   id: string;
@@ -44,6 +48,7 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
   const [contactPhone, setContactPhone] = useState<InternationalPhoneValue>(emptyInternationalPhone);
   const [whatsappPhone, setWhatsappPhone] = useState<InternationalPhoneValue>(emptyInternationalPhone);
   const [sameWhatsappNumber, setSameWhatsappNumber] = useState(false);
+  const [propertyLocation, setPropertyLocation] = useState<PropertyLocation | null>(null);
   const [state, formAction, isPending] = useActionState(submitOnboardingRequest, initialState);
 
   if (state.status === "success") {
@@ -137,6 +142,14 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
 
       <form action={formAction} className="registration-form">
         <input type="hidden" name="requesterKind" value={requesterKind} />
+        <input type="hidden" name="latitude" value={propertyLocation?.lat ?? ""} />
+        <input type="hidden" name="longitude" value={propertyLocation?.lng ?? ""} />
+        <input type="hidden" name="addressLine" value={propertyLocation?.addressLine ?? ""} />
+        <input type="hidden" name="city" value={propertyLocation?.city ?? ""} />
+        <input type="hidden" name="stateRegion" value={propertyLocation?.stateRegion ?? ""} />
+        <input type="hidden" name="countryCode" value={propertyLocation?.countryCode ?? ""} />
+        <input type="hidden" name="timezone" value={propertyLocation?.timezone ?? ""} />
+        <input type="hidden" name="currencyCode" value="XXX" />
 
         <fieldset>
           <legend><span>01</span> Your details</legend>
@@ -172,12 +185,7 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
             <label>Property name<input name="propertyName" required minLength={2} maxLength={160} /></label>
             <label>Property type<select name="propertyType" defaultValue="hotel">{propertyTypes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
             <label>Rooms or beds<input name="roomCount" type="number" min={1} max={10000} defaultValue={20} required /></label>
-            <label className="full-span">Street address<input name="addressLine" required minLength={5} maxLength={300} autoComplete="street-address" /></label>
-            <label>City<input name="city" required autoComplete="address-level2" /></label>
-            <label>State or region<input name="stateRegion" required autoComplete="address-level1" /></label>
-            <label>Country code<input name="countryCode" defaultValue="IN" maxLength={2} required /></label>
-            <label>Timezone<input name="timezone" defaultValue="Asia/Kolkata" required /></label>
-            <label>Currency<input name="currencyCode" defaultValue="INR" maxLength={3} required /></label>
+            <div className="full-span"><PropertyLocationPicker value={propertyLocation} onChange={setPropertyLocation} /></div>
           </div>
         </fieldset>
 

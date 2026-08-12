@@ -16,6 +16,8 @@ const validSubmission = {
   propertyName: "Asha Residency",
   propertyType: "hotel",
   roomCount: "24",
+  latitude: "26.9124",
+  longitude: "75.7873",
   addressLine: "12 Station Road",
   city: "Jaipur",
   stateRegion: "Rajasthan",
