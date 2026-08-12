@@ -49,6 +49,8 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
   const [whatsappPhone, setWhatsappPhone] = useState<InternationalPhoneValue>(emptyInternationalPhone);
   const [sameWhatsappNumber, setSameWhatsappNumber] = useState(false);
   const [propertyLocation, setPropertyLocation] = useState<PropertyLocation | null>(null);
+  const [propertyType, setPropertyType] = useState("hotel");
+  const inventoryUnit = ["hostel", "dormitory"].includes(propertyType) ? "beds" : "rooms";
   const [state, formAction, isPending] = useActionState(submitOnboardingRequest, initialState);
 
   if (state.status === "success") {
@@ -150,6 +152,7 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
         <input type="hidden" name="countryCode" value={propertyLocation?.countryCode ?? ""} />
         <input type="hidden" name="timezone" value={propertyLocation?.timezone ?? ""} />
         <input type="hidden" name="currencyCode" value="XXX" />
+        <input type="hidden" name="inventoryUnit" value={inventoryUnit} />
 
         <fieldset>
           <legend><span>01</span> Your details</legend>
@@ -183,8 +186,12 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
           <div className="form-grid two-column">
             <label>Organization or group name<input name="organizationName" required minLength={2} maxLength={160} /></label>
             <label>Property name<input name="propertyName" required minLength={2} maxLength={160} /></label>
-            <label>Property type<select name="propertyType" defaultValue="hotel">{propertyTypes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-            <label>Rooms or beds<input name="roomCount" type="number" min={1} max={10000} defaultValue={20} required /></label>
+            <label>Property type<select name="propertyType" value={propertyType} onChange={(event) => setPropertyType(event.target.value)}>{propertyTypes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+            <label>
+              Total {inventoryUnit}
+              <small>{inventoryUnit === "beds" ? "Count beds that can be allotted separately." : "Count independently bookable rooms."}</small>
+              <input name="roomCount" type="number" min={1} max={10000} defaultValue={20} required />
+            </label>
             <div className="full-span"><PropertyLocationPicker value={propertyLocation} onChange={setPropertyLocation} /></div>
           </div>
         </fieldset>
