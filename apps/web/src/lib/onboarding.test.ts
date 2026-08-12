@@ -49,6 +49,21 @@ describe("owner onboarding contract", () => {
     }).success).toBe(false);
   });
 
+  it("allows only owners and company operators to submit public onboarding", () => {
+    expect(onboardingSubmissionSchema.safeParse({
+      ...validSubmission,
+      requesterKind: "company_operator",
+    }).success).toBe(true);
+    expect(onboardingSubmissionSchema.safeParse({
+      ...validSubmission,
+      requesterKind: "implementation_partner",
+    }).success).toBe(false);
+    expect(onboardingSubmissionSchema.safeParse({
+      ...validSubmission,
+      requesterKind: "property_staff",
+    }).success).toBe(false);
+  });
+
   it("keeps property staff grants inside the operational permission boundary", () => {
     const keys = propertyStaffPermissions.map(([key]) => key);
     expect(keys).not.toContain("staff.manage");

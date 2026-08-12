@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, BriefcaseBusiness, Building2, Handshake, Users } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Building2, Link2 } from "lucide-react";
 import { useActionState, useState } from "react";
 import {
   propertyTypes,
@@ -28,8 +28,6 @@ const initialState: OnboardingActionState = { status: "idle" };
 const requesterIcons = {
   property_owner: Building2,
   company_operator: BriefcaseBusiness,
-  implementation_partner: Handshake,
-  property_staff: Users,
 } as const;
 
 function formatStatus(status: string) {
@@ -66,7 +64,7 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
       <section className="identity-step" aria-labelledby="identity-step-title">
         <p className="eyebrow">BEFORE WE BEGIN</p>
         <h1 id="identity-step-title">First, tell us who you are.</h1>
-        <p className="registration-lede">Choose your role first. We will then ask only for the property details relevant to your request.</p>
+        <p className="registration-lede">Start a new property request as its owner or company operator. All other roles are assigned through a secure invitation.</p>
         {identity ? (
           <div className="role-identity" aria-label="Signed-in identity">
             <span aria-hidden="true">✓</span>
@@ -94,22 +92,14 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
             );
           })}
         </div>
+        <aside className="invitation-only-note" aria-label="Invitation-only access">
+          <span className="identity-option-icon" aria-hidden="true"><Link2 size={21} strokeWidth={1.8} /></span>
+          <div>
+            <strong>Joining as staff, partner, or another role?</strong>
+            <p>Open the invitation link sent by your property administrator. Your role, property, and permissions are already attached to that link.</p>
+          </div>
+        </aside>
         <p className="existing-user-copy">Already approved? <Link href="/sign-in?next=/app">Sign in to your workspace</Link></p>
-      </section>
-    );
-  }
-
-  if (requesterKind === "property_staff") {
-    return (
-      <section className="registration-success" aria-labelledby="staff-access-title">
-        <span className="success-mark staff" aria-hidden="true">ID</span>
-        <p className="eyebrow">PROPERTY STAFF ACCESS</p>
-        <h1 id="staff-access-title">Your property administrator must invite you.</h1>
-        <p>Staff cannot create or claim an organization through the owner registration flow. Ask the owner or manager for a property-scoped invitation with the role and permissions you need.</p>
-        <div className="actions">
-          <Link className="button primary" href="/sign-in?next=/app">I already have an invitation</Link>
-          <button className="button secondary" type="button" onClick={() => setRequesterKind("")}>Choose another relationship</button>
-        </div>
       </section>
     );
   }
