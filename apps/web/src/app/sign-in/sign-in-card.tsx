@@ -1,8 +1,44 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import Script from "next/script";
+import { useCallback, useRef, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+
+const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID
+  ?? "850600134378-phk6foskmdebd12003mj3nfr9c9trpi0.apps.googleusercontent.com";
+
+type GoogleCredentialResponse = { credential?: string };
+
+type GoogleIdentityServices = {
+  accounts: {
+    id: {
+      initialize(options: {
+        client_id: string;
+        callback: (response: GoogleCredentialResponse) => void;
+        use_fedcm_for_button?: boolean;
+      }): void;
+      renderButton(
+        parent: HTMLElement,
+        options: {
+          type: "standard";
+          theme: "outline";
+          size: "large";
+          text: "continue_with";
+          shape: "rectangular";
+          logo_alignment: "left";
+          width: number;
+        },
+      ): void;
+    };
+  };
+};
+
+declare global {
+  interface Window {
+    google?: GoogleIdentityServices;
+  }
+}
 
 const errorCopy: Record<string, string> = {
   callback: "The sign-in callback was incomplete. Please try again.",
@@ -12,28 +48,63 @@ const errorCopy: Record<string, string> = {
 
 export function SignInCard({ error, next = "/app" }: { error?: string; next?: string }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleReady, setIsGoogleReady] = useState(false);
   const [message, setMessage] = useState(error ? errorCopy[error] : undefined);
+  const googleButtonRef = useRef<HTMLDivElement>(null);
 
-  async function signInWithGoogle() {
+  const completeGoogleSignIn = useCallback(async (response: GoogleCredentialResponse) => {
+    if (!response.credential) {
+      setMessage("Google did not return a valid identity. Please try again.");
+      return;
+    }
+
     setIsLoading(true);
     setMessage(undefined);
 
     try {
       const supabase = createSupabaseBrowserClient();
-      const { error: signInError } = await supabase.auth.signInWithOAuth({
+      const { error: signInError } = await supabase.auth.signInWithIdToken({
         provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-        },
+        token: response.credential,
       });
 
-      if (signInError) setMessage("We could not start Google sign-in. Please try again.");
+      if (signInError) {
+        setMessage("We could not complete Google sign-in. Please try again.");
+        return;
+      }
+
+      await supabase.rpc("claim_approved_onboarding_requests");
+      window.location.assign(next);
     } catch {
       setMessage("Sign-in is not configured for this environment yet.");
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [next]);
+
+  const renderGoogleButton = useCallback(() => {
+    if (!window.google || !googleButtonRef.current) {
+      setMessage("Google sign-in could not load. Please refresh and try again.");
+      return;
+    }
+
+    window.google.accounts.id.initialize({
+      client_id: googleClientId,
+      callback: completeGoogleSignIn,
+      use_fedcm_for_button: true,
+    });
+    googleButtonRef.current.replaceChildren();
+    window.google.accounts.id.renderButton(googleButtonRef.current, {
+      type: "standard",
+      theme: "outline",
+      size: "large",
+      text: "continue_with",
+      shape: "rectangular",
+      logo_alignment: "left",
+      width: Math.min(400, googleButtonRef.current.clientWidth || 400),
+    });
+    setIsGoogleReady(true);
+  }, [completeGoogleSignIn]);
 
   return (
     <main className="sign-in-shell">
@@ -46,10 +117,20 @@ export function SignInCard({ error, next = "/app" }: { error?: string; next?: st
           is deliberately handled on managed hotel devices, not here.
         </p>
         {message ? <p className="form-message" role="alert">{message}</p> : null}
-        <button className="google-button" onClick={signInWithGoogle} disabled={isLoading}>
-          <span aria-hidden="true">G</span>
-          {isLoading ? "Opening Google…" : "Continue with Google"}
-        </button>
+        <Script
+          src="https://accounts.google.com/gsi/client"
+          strategy="afterInteractive"
+          onLoad={renderGoogleButton}
+          onError={() => setMessage("Google sign-in could not load. Please refresh and try again.")}
+        />
+        <div className="google-identity-wrap" aria-busy={isLoading}>
+          <div ref={googleButtonRef} className="google-identity-button" />
+          {!isGoogleReady || isLoading ? (
+            <div className="google-identity-status" role="status">
+              {isLoading ? "Verifying your account…" : "Loading secure Google sign-in…"}
+            </div>
+          ) : null}
+        </div>
         <p className="sign-in-meta">
           By continuing, you acknowledge that access is limited by your active organization,
           property assignment, role, and tenant lifecycle.
