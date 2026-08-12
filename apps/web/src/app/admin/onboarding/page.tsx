@@ -14,6 +14,7 @@ type OnboardingRequest = {
   property_name: string;
   property_type: string;
   room_count: number;
+  inventory_unit: "rooms" | "beds";
   address_line: string;
   city: string;
   state_region: string;
@@ -99,7 +100,7 @@ export default async function AdminOnboardingPage() {
                     <dl className="request-detail-grid">
                       <div><dt>Applicant</dt><dd>{request.contact_name}<small>{humanize(request.requester_kind)}</small></dd></div>
                       <div><dt>Contact</dt><dd>{request.contact_email}<small>{request.contact_phone}{request.whatsapp_phone ? ` · WA ${request.whatsapp_phone}` : ""}</small></dd></div>
-                      <div><dt>Property</dt><dd>{humanize(request.property_type)} · {request.room_count} rooms/beds<small>{request.address_line}, {request.city}, {request.state_region}, {request.country_code}</small></dd></div>
+                      <div><dt>Property</dt><dd>{humanize(request.property_type)} · {request.room_count} {request.inventory_unit}<small>{request.address_line}, {request.city}, {request.state_region}, {request.country_code}</small></dd></div>
                       <div><dt>Operating context</dt><dd>{request.timezone}<small>{request.currency_code} · requested {request.requested_plan}</small></dd></div>
                     </dl>
                     {request.notes ? <aside className="request-note"><strong>Applicant note</strong><p>{request.notes}</p></aside> : null}

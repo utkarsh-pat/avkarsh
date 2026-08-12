@@ -8,6 +8,7 @@ export const requesterKinds = [
 export const propertyTypes = [
   ["hotel", "Hotel"],
   ["hostel", "Hostel"],
+  ["dormitory", "Dormitory"],
   ["resort", "Resort"],
   ["guest_house", "Guest house"],
   ["serviced_apartment", "Serviced apartment"],
@@ -55,6 +56,7 @@ export const onboardingSubmissionSchema = z.object({
   propertyName: z.string().trim().min(2).max(160),
   propertyType: z.enum(propertyTypes.map(([value]) => value)),
   roomCount: z.coerce.number().int().min(1).max(10000),
+  inventoryUnit: z.enum(["rooms", "beds"]),
   latitude: z.coerce.number().min(-90).max(90),
   longitude: z.coerce.number().min(-180).max(180),
   addressLine: z.string().trim().min(5).max(300),

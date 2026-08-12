@@ -18,7 +18,12 @@ export type PropertyLocation = {
 type Props = { value: PropertyLocation | null; onChange: (value: PropertyLocation) => void };
 
 const fallbackCenter: LatLngExpression = [20.5937, 78.9629];
-const pinIcon = divIcon({ className: "property-map-pin", html: '<span aria-hidden="true">●</span>', iconSize: [34, 34], iconAnchor: [17, 30] });
+const pinIcon = divIcon({
+  className: "property-map-pin",
+  html: `<svg aria-hidden="true" viewBox="0 0 48 60" xmlns="http://www.w3.org/2000/svg"><path d="M24 2C11.85 2 2 11.85 2 24c0 16.5 22 34 22 34s22-17.5 22-34C46 11.85 36.15 2 24 2Z" fill="#173b7a" stroke="#fff" stroke-width="3"/><circle cx="24" cy="24" r="13" fill="#fff"/><path d="M17 31V18.5c0-.83.67-1.5 1.5-1.5h11c.83 0 1.5.67 1.5 1.5V31M15 31h18M21 21h2m4 0h2m-8 4h2m4 0h2m-6 6v-3h4v3" fill="none" stroke="#173b7a" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></svg>`,
+  iconSize: [48, 60],
+  iconAnchor: [24, 57],
+});
 
 function MapInteraction({ position, accuracy, onPick }: { position: [number, number] | null; accuracy: number; onPick: (lat: number, lng: number) => void }) {
   const map = useMap();

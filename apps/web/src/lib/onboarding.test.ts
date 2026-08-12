@@ -16,6 +16,7 @@ const validSubmission = {
   propertyName: "Asha Residency",
   propertyType: "hotel",
   roomCount: "24",
+  inventoryUnit: "rooms",
   latitude: "26.9124",
   longitude: "75.7873",
   addressLine: "12 Station Road",
@@ -64,6 +65,15 @@ describe("owner onboarding contract", () => {
       ...validSubmission,
       roomCount: 0,
     }).success).toBe(false);
+  });
+
+  it("distinguishes room inventory from bed-wise dormitory inventory", () => {
+    expect(onboardingSubmissionSchema.safeParse({
+      ...validSubmission,
+      propertyType: "dormitory",
+      inventoryUnit: "beds",
+      roomCount: 80,
+    }).success).toBe(true);
   });
 
   it("allows only owners and company operators to submit public onboarding", () => {
