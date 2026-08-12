@@ -15,6 +15,8 @@ import {
   Users,
 } from "lucide-react";
 import { requirePlatformAdmin } from "@/lib/platform-admin";
+import { getSupabasePublicConfig } from "@/lib/supabase/config";
+import { IntegrationControls } from "../integration-controls";
 
 type PageProps = {
   params: Promise<{ section: string }>;
@@ -37,6 +39,12 @@ const pageMeta = {
 
 type Section = keyof typeof pageMeta;
 type Row = Record<string, unknown>;
+type SettingsExtras = {
+  integration: { meta_app_id?: string | null; meta_credentials_configured?: boolean; webhook_verify_token_configured?: boolean; resend_credentials_configured?: boolean; resend_from_email?: string | null; resend_from_name?: string | null };
+  properties: Array<{ id: string; name: string; code: string }>;
+  configs: Array<{ id: string; property_id: string; business_name: string | null; display_phone_number: string; phone_number_id: string; waba_id: string; graph_api_version: string; status: string; subscribed_at: string | null; templates_synced_at: string | null; last_error: string | null }>;
+  deliveryCounts: Record<string, number>;
+};
 
 function text(value: unknown, fallback = "—") {
   return typeof value === "string" && value.trim() ? value : fallback;
@@ -66,6 +74,7 @@ export default async function AdminSectionPage({ params, searchParams }: PagePro
   let rows: Row[] = [];
   let errorMessage = "";
   let metrics: Array<{ label: string; value: string | number; tone?: string }> = [];
+  let settingsExtras: SettingsExtras = { integration: {}, properties: [], configs: [], deliveryCounts: {} };
 
   if (currentSection === "listings") {
     let request = supabase.from("properties").select("id, name, code, status, timezone, currency_code, created_at, organizations(name, lifecycle_state)").order("created_at", { ascending: false }).limit(200);
@@ -161,9 +170,25 @@ export default async function AdminSectionPage({ params, searchParams }: PagePro
       { label: "Open incidents", value: Number(stats.openIncidents ?? 0), tone: "danger" },
     ];
   } else if (currentSection === "settings") {
-    const result = await supabase.from("platform_settings").select("*").single();
-    rows = result.data ? [result.data as Row] : [];
-    errorMessage = result.error?.message ?? "";
+    const [settingsResult, integrationResult, propertiesResult, configsResult, deliveriesResult] = await Promise.all([
+      supabase.from("platform_settings").select("*").single(),
+      supabase.from("platform_integrations").select("*").single(),
+      supabase.from("properties").select("id,name,code").eq("status", "active").order("name"),
+      supabase.from("property_whatsapp_configs").select("id,property_id,business_name,display_phone_number,phone_number_id,waba_id,graph_api_version,status,subscribed_at,templates_synced_at,last_error").order("created_at"),
+      supabase.from("notification_deliveries").select("status").limit(1000),
+    ]);
+    rows = settingsResult.data ? [settingsResult.data as Row] : [];
+    errorMessage = [settingsResult.error, integrationResult.error, propertiesResult.error, configsResult.error, deliveriesResult.error].find(Boolean)?.message ?? "";
+    const deliveryCounts = (deliveriesResult.data ?? []).reduce<Record<string, number>>((counts, item) => {
+      counts[item.status] = (counts[item.status] ?? 0) + 1;
+      return counts;
+    }, {});
+    settingsExtras = {
+      integration: integrationResult.data ?? {},
+      properties: propertiesResult.data ?? [],
+      configs: configsResult.data ?? [],
+      deliveryCounts,
+    };
     metrics = [
       { label: "WhatsApp", value: rows[0]?.whatsapp_enabled ? "Enabled" : "Disabled", tone: rows[0]?.whatsapp_enabled ? "success" : "warning" },
       { label: "Incident email", value: rows[0]?.incident_email_enabled ? "Enabled" : "Disabled", tone: rows[0]?.incident_email_enabled ? "success" : "warning" },
@@ -202,7 +227,7 @@ export default async function AdminSectionPage({ params, searchParams }: PagePro
         {currentSection === "incidents" ? <IncidentsFeed rows={rows} /> : null}
         {currentSection === "audit" || currentSection === "activity" ? <AuditTable rows={rows} /> : null}
         {currentSection === "analytics" ? <AnalyticsPanel stats={rows[0] ?? {}} /> : null}
-        {currentSection === "settings" ? <SettingsPanel settings={rows[0] ?? {}} /> : null}
+        {currentSection === "settings" ? <SettingsPanel settings={rows[0] ?? {}} extras={settingsExtras} /> : null}
       </section>
     </main>
   );
@@ -234,7 +259,7 @@ function CasesTable({ rows }: { rows: Row[] }) {
 
 function WhatsAppTable({ rows }: { rows: Row[] }) {
   if (!rows.length) return <EmptyRows copy="WhatsApp conversations will appear after a property connects its Meta Cloud API number." />;
-  return <div className="control-conversation-list">{rows.map((row) => <article key={String(row.id)}><span className="control-row-avatar whatsapp">{text(row.guest_name).slice(0, 1).toUpperCase()}</span><div><h2>{text(row.guest_name)}</h2><p>{text(row.last_message_preview, "No messages yet")}</p><small>{text(row.whatsapp_phone)} · {nestedName(row.properties, "name")}</small></div><div><span className={`control-status ${text(row.state, "bot")}`}>{humanize(row.state)}</span>{row.tag ? <span className={`control-status ${text(row.tag)}`}>{humanize(row.tag)}</span> : null}</div><strong>{Number(row.unread_count ?? 0)} unread</strong><time>{dateTime(row.last_message_at)}</time></article>)}</div>;
+  return <div className="control-conversation-list">{rows.map((row) => <Link href={`/admin/whatsapp/${String(row.id)}`} key={String(row.id)}><span className="control-row-avatar whatsapp">{text(row.guest_name).slice(0, 1).toUpperCase()}</span><div><h2>{text(row.guest_name)}</h2><p>{text(row.last_message_preview, "No messages yet")}</p><small>{text(row.whatsapp_phone)} · {nestedName(row.properties, "name")}</small></div><div><span className={`control-status ${text(row.state, "bot")}`}>{humanize(row.state)}</span>{row.tag ? <span className={`control-status ${text(row.tag)}`}>{humanize(row.tag)}</span> : null}</div><strong>{Number(row.unread_count ?? 0)} unread</strong><time>{dateTime(row.last_message_at)}</time></Link>)}</div>;
 }
 
 function IncidentsFeed({ rows }: { rows: Row[] }) {
@@ -257,7 +282,10 @@ function AnalyticsPanel({ stats }: { stats: Row }) {
   return <div className="control-analytics-grid">{signals.map(([label, value, copy]) => <article key={String(label)}><span>{String(label)}</span><strong>{Number(value ?? 0).toLocaleString("en-IN")}</strong><p>{String(copy)}</p></article>)}</div>;
 }
 
-function SettingsPanel({ settings }: { settings: Row }) {
+function SettingsPanel({ settings, extras }: { settings: Row; extras: SettingsExtras }) {
   if (!Object.keys(settings).length) return <EmptyRows copy="Platform settings are not available." />;
-  return <div className="control-settings-grid"><section><h2>Platform defaults</h2><dl><div><dt>Support email</dt><dd>{text(settings.support_email, "Not configured")}</dd></div><div><dt>Timezone</dt><dd>{text(settings.default_timezone)}</dd></div><div><dt>Currency</dt><dd>{text(settings.default_currency_code)}</dd></div><div><dt>Data retention</dt><dd>{Number(settings.data_retention_days ?? 0)} days</dd></div></dl></section><section><h2>Service switches</h2><dl><div><dt>WhatsApp provider</dt><dd>{humanize(settings.whatsapp_provider)}</dd></div><div><dt>WhatsApp Direct</dt><dd><span className={`control-status ${settings.whatsapp_enabled ? "active" : "inactive"}`}>{settings.whatsapp_enabled ? "Enabled" : "Disabled"}</span></dd></div><div><dt>Incident emails</dt><dd><span className={`control-status ${settings.incident_email_enabled ? "active" : "inactive"}`}>{settings.incident_email_enabled ? "Enabled" : "Disabled"}</span></dd></div><div><dt>Maintenance mode</dt><dd><span className={`control-status ${settings.maintenance_mode ? "critical" : "active"}`}>{settings.maintenance_mode ? "On" : "Off"}</span></dd></div></dl></section></div>;
+  const publicConfig = getSupabasePublicConfig();
+  const webhookUrl = `${publicConfig?.url ?? "https://oopllioyzufglaedbwuz.supabase.co"}/functions/v1/whatsapp-webhook`;
+  const operationalSettings = { support_email: typeof settings.support_email === "string" ? settings.support_email : null, default_timezone: text(settings.default_timezone, "Asia/Kolkata"), default_currency_code: text(settings.default_currency_code, "INR"), whatsapp_enabled: Boolean(settings.whatsapp_enabled), incident_email_enabled: Boolean(settings.incident_email_enabled), maintenance_mode: Boolean(settings.maintenance_mode), data_retention_days: Number(settings.data_retention_days ?? 365) };
+  return <><div className="control-settings-grid"><section><h2>Platform defaults</h2><dl><div><dt>Support email</dt><dd>{text(settings.support_email, "Not configured")}</dd></div><div><dt>Timezone</dt><dd>{text(settings.default_timezone)}</dd></div><div><dt>Currency</dt><dd>{text(settings.default_currency_code)}</dd></div><div><dt>Data retention</dt><dd>{Number(settings.data_retention_days ?? 0)} days</dd></div></dl></section><section><h2>Service switches</h2><dl><div><dt>WhatsApp provider</dt><dd>{humanize(settings.whatsapp_provider)}</dd></div><div><dt>WhatsApp Direct</dt><dd><span className={`control-status ${settings.whatsapp_enabled ? "active" : "inactive"}`}>{settings.whatsapp_enabled ? "Enabled" : "Disabled"}</span></dd></div><div><dt>Incident emails</dt><dd><span className={`control-status ${settings.incident_email_enabled ? "active" : "inactive"}`}>{settings.incident_email_enabled ? "Enabled" : "Disabled"}</span></dd></div><div><dt>Maintenance mode</dt><dd><span className={`control-status ${settings.maintenance_mode ? "critical" : "active"}`}>{settings.maintenance_mode ? "On" : "Off"}</span></dd></div></dl></section></div><IntegrationControls settings={operationalSettings} integration={extras.integration} properties={extras.properties} configs={extras.configs} webhookUrl={webhookUrl} deliveryCounts={extras.deliveryCounts} /></>;
 }
