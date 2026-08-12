@@ -3,8 +3,6 @@ import { z } from "zod";
 export const requesterKinds = [
   { value: "property_owner", label: "Property owner", copy: "I own or directly operate this property." },
   { value: "company_operator", label: "Company operator", copy: "I manage properties for a hotel group or company." },
-  { value: "implementation_partner", label: "Implementation partner", copy: "I am onboarding this property for a client." },
-  { value: "property_staff", label: "Property staff", copy: "I work at the property and need the right access path." },
 ] as const;
 
 export const propertyTypes = [
