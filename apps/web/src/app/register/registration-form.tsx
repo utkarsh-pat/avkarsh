@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { ArrowRight, BriefcaseBusiness, Building2, Link2 } from "lucide-react";
+import {
+  ArrowRight, Ban, BriefcaseBusiness, Building2, Check, CheckCircle2,
+  Clock3, Copy, Home, Link2, ShieldCheck, XCircle,
+} from "lucide-react";
 import { useActionState, useState } from "react";
 import {
   emptyInternationalPhone,
@@ -43,6 +46,39 @@ function formatStatus(status: string) {
   return status.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
 }
 
+function formatRequestDate(value: string) {
+  return new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" }).format(new Date(value));
+}
+
+function requestStatusMeta(status: string) {
+  if (status === "approved") return { label: "Approved", Icon: CheckCircle2, tone: "approved", copy: "Access is ready." };
+  if (status === "rejected") return { label: "Rejected", Icon: XCircle, tone: "rejected", copy: "Review is complete." };
+  if (status === "revoked") return { label: "Revoked", Icon: Ban, tone: "revoked", copy: "Access has been withdrawn." };
+  if (status === "under_review") return { label: "Under review", Icon: ShieldCheck, tone: "under-review", copy: "The team is checking your details." };
+  return { label: formatStatus(status), Icon: Clock3, tone: "pending", copy: "Waiting for the review team." };
+}
+
+function ExistingRequestsPanel({ requests, className = "" }: { requests: ExistingRequest[]; className?: string }) {
+  return (
+    <aside className={`existing-requests ${className}`.trim()} aria-label="Your existing requests">
+      <div className="existing-requests-heading"><strong>Your recent requests</strong><small>Live application status</small></div>
+      <div className="existing-request-list">
+        {requests.map((request) => {
+          const status = requestStatusMeta(request.status);
+          const StatusIcon = status.Icon;
+          return (
+            <div className="existing-request-row" key={request.id}>
+              <span className={`request-status-icon ${status.tone}`} aria-hidden="true"><StatusIcon size={18} /></span>
+              <div className="existing-request-copy"><strong>{request.property_name}</strong><small>{status.copy} · {formatRequestDate(request.created_at)}</small></div>
+              <span className={`request-status-pill ${status.tone}`}><StatusIcon size={13} />{status.label}</span>
+            </div>
+          );
+        })}
+      </div>
+    </aside>
+  );
+}
+
 export function RegistrationForm({ identity, existingRequests }: RegistrationFormProps) {
   const [requesterKind, setRequesterKind] = useState("");
   const [contactPhone, setContactPhone] = useState<InternationalPhoneValue>(emptyInternationalPhone);
@@ -50,25 +86,61 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
   const [sameWhatsappNumber, setSameWhatsappNumber] = useState(false);
   const [propertyLocation, setPropertyLocation] = useState<PropertyLocation | null>(null);
   const [propertyType, setPropertyType] = useState("hotel");
+  const [copiedReference, setCopiedReference] = useState(false);
   const inventoryUnit = ["hostel", "dormitory"].includes(propertyType) ? "beds" : "rooms";
   const [state, formAction, isPending] = useActionState(submitOnboardingRequest, initialState);
 
   if (state.status === "success") {
     return (
       <section className="registration-success" aria-labelledby="request-received-title">
-        <span className="success-mark" aria-hidden="true">✓</span>
-        <p className="eyebrow">REQUEST RECEIVED</p>
-        <h1 id="request-received-title">Your property is in the review queue.</h1>
-        <p>{state.message}</p>
-        <dl className="request-receipt">
-          <div><dt>Request reference</dt><dd>{state.requestId}</dd></div>
-          <div><dt>Next step</dt><dd>Admin review, permissions, and subscription setup</dd></div>
-        </dl>
-        <div className="actions">
-          {identity ? <Link className="button primary" href="/app">Open workspace</Link> : (
-            <Link className="button primary" href="/sign-in?next=/register">Sign in with the same email</Link>
-          )}
-          <Link className="button secondary" href="/">Back home</Link>
+        <div className="success-hero">
+          <span className="success-mark" aria-hidden="true"><Check size={28} strokeWidth={2.6} /></span>
+          <p className="eyebrow">REQUEST RECEIVED</p>
+          <h1 id="request-received-title">Your property is now in review.</h1>
+          <p>{state.message}</p>
+          <div className="success-current-status">
+            <span aria-hidden="true"><Clock3 size={20} /></span>
+            <div><small>Current status</small><strong>Pending review</strong></div>
+          </div>
+        </div>
+
+        <div className="success-summary-card">
+          <div className="success-summary-heading">
+            <span aria-hidden="true"><ShieldCheck size={21} /></span>
+            <div><strong>Request saved securely</strong><small>Keep this reference for future communication.</small></div>
+          </div>
+          <div className="request-reference">
+            <div><small>Request reference</small><code>{state.requestId}</code></div>
+            <button
+              type="button"
+              aria-label="Copy request reference"
+              onClick={async () => {
+                if (!state.requestId) return;
+                try {
+                  await navigator.clipboard.writeText(state.requestId);
+                  setCopiedReference(true);
+                  window.setTimeout(() => setCopiedReference(false), 1800);
+                } catch {
+                  setCopiedReference(false);
+                }
+              }}
+            >
+              {copiedReference ? <Check size={18} /> : <Copy size={18} />}
+              <span>{copiedReference ? "Copied" : "Copy"}</span>
+            </button>
+          </div>
+          <div className="review-timeline" aria-label="What happens next">
+            <div className="complete"><span><Check size={14} /></span><div><strong>Request received</strong><small>Your details are safely recorded.</small></div></div>
+            <div className="active"><span>2</span><div><strong>Admin review</strong><small>We verify the property and discuss requirements.</small></div></div>
+            <div><span>3</span><div><strong>Access decision</strong><small>You will see approved or rejected status here.</small></div></div>
+          </div>
+          <p className="success-note">No further action is needed right now. We will contact you if any detail needs clarification.</p>
+          <div className="success-actions">
+            {identity ? <Link className="button primary" href="/app">View request status <ArrowRight size={17} /></Link> : (
+              <Link className="button primary" href="/sign-in?next=/register">Sign in to track status <ArrowRight size={17} /></Link>
+            )}
+            <Link className="button secondary" href="/"><Home size={17} /> Back home</Link>
+          </div>
         </div>
       </section>
     );
@@ -87,12 +159,7 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
           </div>
         ) : null}
         {existingRequests.length > 0 ? (
-          <aside className="existing-requests role-step-requests" aria-label="Your existing requests">
-            <strong>Your recent requests</strong>
-            {existingRequests.map((request) => (
-              <span key={request.id}>{request.property_name} · {formatStatus(request.status)}{request.approved_plan ? ` · ${request.approved_plan}` : ""}</span>
-            ))}
-          </aside>
+          <ExistingRequestsPanel requests={existingRequests} className="role-step-requests" />
         ) : null}
         <div className="identity-grid">
           {requesterKinds.map((kind) => {
@@ -134,12 +201,7 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
       </div>
 
       {existingRequests.length > 0 ? (
-        <aside className="existing-requests" aria-label="Your existing requests">
-          <strong>Your recent requests</strong>
-          {existingRequests.map((request) => (
-            <span key={request.id}>{request.property_name} · {formatStatus(request.status)}{request.approved_plan ? ` · ${request.approved_plan}` : ""}</span>
-          ))}
-        </aside>
+        <ExistingRequestsPanel requests={existingRequests} />
       ) : null}
 
       <form action={formAction} className="registration-form">
