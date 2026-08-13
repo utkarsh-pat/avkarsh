@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(19);
+select plan(22);
 
 select has_table('public', 'platform_admins', 'platform admin RBAC table exists');
 select has_table('public', 'onboarding_requests', 'owner onboarding request table exists');
@@ -86,6 +86,17 @@ insert into public.onboarding_requests (
   'hotel', 10, '4 Test Road', 'Delhi', 'Delhi', array['dashboard.view']
 );
 
+insert into public.onboarding_requests (
+  id, requester_profile_id, requester_kind, contact_name, contact_email, contact_phone,
+  organization_name, property_name, property_type, room_count,
+  address_line, city, state_region, requested_permissions
+) values (
+  '47000000-0000-0000-0000-000000000004',
+  '42000000-0000-0000-0000-000000000004', 'property_owner', 'Retry Owner',
+  'owner@example.test', '+91 95555 55555', 'Retry Hotels', 'Retry Hotel',
+  'hotel', 8, '5 Test Road', 'Delhi', 'Delhi', array['dashboard.view']
+);
+
 set local role authenticated;
 set local request.jwt.claim.sub = '42000000-0000-0000-0000-000000000004';
 set local request.jwt.claims = '{"sub":"42000000-0000-0000-0000-000000000004","email":"owner@example.test","role":"authenticated"}';
@@ -147,6 +158,32 @@ select throws_ok(
   '23514', 'property staff must use an organization invitation',
   'staff requests cannot be elevated into owner provisioning'
 );
+
+select lives_ok(
+  $$select public.review_onboarding_request(
+    '47000000-0000-0000-0000-000000000004', 'reject',
+    '{"reason":"Property details could not be verified"}'::jsonb
+  )$$,
+  'platform super admin can reject an onboarding request'
+);
+
+reset role;
+
+select is(
+  (select count(*) from public.onboarding_requests where id = '47000000-0000-0000-0000-000000000004'),
+  0::bigint,
+  'rejected applicant data is removed so the owner can restart onboarding'
+);
+
+select is(
+  (select count(*) from audit.events where event_name = 'onboarding.request_rejected' and target_id = '47000000-0000-0000-0000-000000000004'),
+  1::bigint,
+  'rejection decision remains in the audit trail after applicant data deletion'
+);
+
+set local role authenticated;
+set local request.jwt.claim.sub = '41000000-0000-0000-0000-000000000004';
+set local request.jwt.claims = '{"sub":"41000000-0000-0000-0000-000000000004","email":"platform@example.test","role":"authenticated"}';
 
 select lives_ok(
   $$select public.review_onboarding_request(

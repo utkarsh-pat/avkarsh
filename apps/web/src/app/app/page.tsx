@@ -60,6 +60,11 @@ export default async function AppPage() {
     redirect("/register");
   }
 
+  const firstProperty = properties.at(0);
+  if (!isPlatformAdmin && firstProperty) {
+    redirect(`/app/property/${firstProperty.id}`);
+  }
+
   return (
     <PropertyWorkspace
       email={email}

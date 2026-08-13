@@ -4,7 +4,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
   ArrowRight, Ban, BriefcaseBusiness, Building2, Check, CheckCircle2,
-  Clock3, Copy, Home, Link2, ShieldCheck, XCircle,
+  Clock3, Copy, Home, Link2, Mail, MessageCircleMore, Phone, ShieldCheck, XCircle,
 } from "lucide-react";
 import { useActionState, useState } from "react";
 import {
@@ -36,6 +36,9 @@ type RegistrationFormProps = {
 };
 
 const initialState: OnboardingActionState = { status: "idle" };
+const supportEmail = "ceoutkarshpatel@gmail.com";
+const supportPhoneDisplay = "+91 90278 72803";
+const supportPhoneDigits = "919027872803";
 
 const requesterIcons = {
   property_owner: Building2,
@@ -79,6 +82,40 @@ function ExistingRequestsPanel({ requests, className = "" }: { requests: Existin
   );
 }
 
+function ActiveRequestStatus({ request }: { request: ExistingRequest }) {
+  const status = requestStatusMeta(request.status);
+  const StatusIcon = status.Icon;
+  const whatsappMessage = encodeURIComponent(`Hi Avkarsh, I need help with my ${request.property_name} onboarding request (${request.id}).`);
+
+  return (
+    <section className="request-waiting-screen" aria-labelledby="request-waiting-title">
+      <div className="request-waiting-hero">
+        <span className={`request-status-pill ${status.tone}`}><StatusIcon size={15} />{status.label}</span>
+        <p className="eyebrow">PROPERTY ONBOARDING</p>
+        <h1 id="request-waiting-title">Your request is {request.status === "under_review" ? "being reviewed." : "in the review queue."}</h1>
+        <p>We have your details for <strong>{request.property_name}</strong>. You do not need to fill the form again. We will contact you if anything else is needed.</p>
+      </div>
+
+      <div className="request-waiting-card">
+        <div className="request-waiting-summary">
+          <div><small>Property</small><strong>{request.property_name}</strong></div>
+          <div><small>Submitted</small><strong>{formatRequestDate(request.created_at)}</strong></div>
+          <div><small>Request reference</small><code>{request.id}</code></div>
+        </div>
+
+        <div className="request-contact-panel">
+          <div><p className="eyebrow">NEED HELP?</p><h2>Talk to the Avkarsh team.</h2><p>For corrections, verification questions, or an urgent update, reach us directly.</p></div>
+          <div className="request-contact-actions">
+            <a className="button primary" href={`https://wa.me/${supportPhoneDigits}?text=${whatsappMessage}`} target="_blank" rel="noreferrer"><MessageCircleMore size={18} /> WhatsApp us</a>
+            <a className="button secondary" href={`tel:+${supportPhoneDigits}`}><Phone size={18} /> {supportPhoneDisplay}</a>
+            <a className="button secondary" href={`mailto:${supportEmail}?subject=${encodeURIComponent(`Avkarsh onboarding · ${request.property_name}`)}`}><Mail size={18} /> Email us</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function RegistrationForm({ identity, existingRequests }: RegistrationFormProps) {
   const [requesterKind, setRequesterKind] = useState("");
   const [contactPhone, setContactPhone] = useState<InternationalPhoneValue>(emptyInternationalPhone);
@@ -89,6 +126,11 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
   const [copiedReference, setCopiedReference] = useState(false);
   const inventoryUnit = ["hostel", "dormitory"].includes(propertyType) ? "beds" : "rooms";
   const [state, formAction, isPending] = useActionState(submitOnboardingRequest, initialState);
+  const activeRequest = existingRequests.find((request) => request.status === "pending" || request.status === "under_review");
+
+  if (activeRequest && state.status !== "success") {
+    return <ActiveRequestStatus request={activeRequest} />;
+  }
 
   if (state.status === "success") {
     return (
@@ -147,6 +189,7 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
   }
 
   if (!requesterKind) {
+    const revokedRequests = existingRequests.filter((request) => request.status === "revoked");
     return (
       <section className="identity-step" aria-labelledby="identity-step-title">
         <p className="eyebrow">BEFORE WE BEGIN</p>
@@ -158,9 +201,7 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
             <div><strong>{identity.name || "Signed-in user"}</strong><small>{identity.email}</small></div>
           </div>
         ) : null}
-        {existingRequests.length > 0 ? (
-          <ExistingRequestsPanel requests={existingRequests} className="role-step-requests" />
-        ) : null}
+        {revokedRequests.length > 0 ? <ExistingRequestsPanel requests={revokedRequests} /> : null}
         <div className="identity-grid">
           {requesterKinds.map((kind) => {
             const RoleIcon = requesterIcons[kind.value];
@@ -199,10 +240,6 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
           <button className="text-button" type="button" onClick={() => setRequesterKind("")}>← Change relationship</button>
         )}
       </div>
-
-      {existingRequests.length > 0 ? (
-        <ExistingRequestsPanel requests={existingRequests} />
-      ) : null}
 
       <form action={formAction} className="registration-form">
         <input type="hidden" name="requesterKind" value={requesterKind} />
