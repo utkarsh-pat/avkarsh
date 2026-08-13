@@ -87,13 +87,13 @@ insert into public.onboarding_requests (
 );
 
 insert into public.onboarding_requests (
-  id, requester_profile_id, requester_kind, contact_name, contact_email, contact_phone,
+  id, requester_kind, contact_name, contact_email, contact_phone,
   organization_name, property_name, property_type, room_count,
   address_line, city, state_region, requested_permissions
 ) values (
   '47000000-0000-0000-0000-000000000004',
-  '42000000-0000-0000-0000-000000000004', 'property_owner', 'Retry Owner',
-  'owner@example.test', '+91 95555 55555', 'Retry Hotels', 'Retry Hotel',
+  'property_owner', 'Retry Owner',
+  'retry-owner@example.test', '+91 95555 55555', 'Retry Hotels', 'Retry Hotel',
   'hotel', 8, '5 Test Road', 'Delhi', 'Delhi', array['dashboard.view']
 );
 
