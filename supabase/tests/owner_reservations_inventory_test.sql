@@ -1,11 +1,12 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(17);
+select plan(22);
 
 select has_table('public', 'inventory_units', 'sellable inventory table exists');
 select has_table('public', 'reservations', 'reservation table exists');
 select has_table('public', 'reservation_allocations', 'allocation table exists');
+select has_table('public', 'property_tasks', 'property operations task table exists');
 
 select ok(
   (select bool_and(relrowsecurity)
@@ -13,7 +14,8 @@ select ok(
    where oid in (
      'public.inventory_units'::regclass,
      'public.reservations'::regclass,
-     'public.reservation_allocations'::regclass
+     'public.reservation_allocations'::regclass,
+     'public.property_tasks'::regclass
    )),
   'all reservation tables enable RLS'
 );
@@ -21,7 +23,8 @@ select ok(
 select ok(
   not has_table_privilege('anon', 'public.inventory_units', 'SELECT')
   and not has_table_privilege('anon', 'public.reservations', 'SELECT')
-  and not has_table_privilege('anon', 'public.reservation_allocations', 'SELECT'),
+  and not has_table_privilege('anon', 'public.reservation_allocations', 'SELECT')
+  and not has_table_privilege('anon', 'public.property_tasks', 'SELECT'),
   'anonymous clients cannot access reservation data'
 );
 
@@ -50,6 +53,7 @@ values ('77000000-0000-0000-0000-000000000007', '73000000-0000-0000-0000-0000000
 insert into public.property_permission_overrides (property_membership_id, permission_key, effect, reason, granted_by_actor_id)
 values
   ('77000000-0000-0000-0000-000000000007', 'reservation.manage', 'allow', 'Reservation test access', '71000000-0000-0000-0000-000000000007'),
+  ('77000000-0000-0000-0000-000000000007', 'stay.manage', 'allow', 'Operations test access', '71000000-0000-0000-0000-000000000007'),
   ('77000000-0000-0000-0000-000000000007', 'whatsapp.manage', 'allow', 'WhatsApp media test access', '71000000-0000-0000-0000-000000000007');
 
 insert into public.whatsapp_conversations (
@@ -69,6 +73,29 @@ select lives_ok(
   $$insert into public.inventory_units (id, organization_id, property_id, unit_code, display_name, unit_kind, category, max_occupancy, nightly_rate_minor)
     values ('78000000-0000-0000-0000-000000000007', '73000000-0000-0000-0000-000000000007', '74000000-0000-0000-0000-000000000007', '101', 'Room 101', 'room', 'Deluxe', 3, 250000)$$,
   'authorized owner can add matching room inventory'
+);
+
+select lives_ok(
+  $$insert into public.property_tasks (
+      organization_id, property_id, inventory_unit_id, task_type, title, priority, created_by_profile_id
+    ) values (
+      '73000000-0000-0000-0000-000000000007', '74000000-0000-0000-0000-000000000007',
+      '78000000-0000-0000-0000-000000000007', 'housekeeping', 'Prepare Room 101', 'high',
+      '71000000-0000-0000-0000-000000000007'
+    )$$,
+  'authorized owner can create a scoped operational task'
+);
+
+select lives_ok(
+  $$update public.inventory_units set operational_state = 'cleaning', housekeeping_assignee = 'Morning shift'
+    where id = '78000000-0000-0000-0000-000000000007'$$,
+  'owner can update physical readiness independently'
+);
+
+select results_eq(
+  $$select status || ':' || operational_state from public.inventory_units where id = '78000000-0000-0000-0000-000000000007'$$,
+  array['available:cleaning'::text],
+  'sellability and physical readiness remain separate states'
 );
 
 select ok(
@@ -155,6 +182,12 @@ select results_eq(
   $$select count(*)::bigint from public.reservations$$,
   array[0::bigint],
   'unassigned user cannot enumerate reservations'
+);
+
+select results_eq(
+  $$select count(*)::bigint from public.property_tasks$$,
+  array[0::bigint],
+  'unassigned user cannot enumerate property tasks'
 );
 
 select * from finish();

@@ -8,8 +8,9 @@ import { AppShell } from "@/components/app-shell";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PropertyDashboardCharts } from "./dashboard-charts";
+import { SuperViewBoard, type SuperViewAllocation, type SuperViewTask, type SuperViewUnit } from "./super-view-board";
 
-type PropertyContextPageProps = { params: Promise<{ propertyId: string }> };
+type PropertyContextPageProps = { params: Promise<{ propertyId: string }>; searchParams: Promise<{ view?: string; filter?: string; floor?: string; type?: string; q?: string; unit?: string }> };
 type PropertyContext = { id: string; organization_id: string; name: string; code: string; inventory_unit: string; currency_code: string };
 type OrganizationContext = { name: string; lifecycle_state: string };
 type OperationalCase = {
@@ -43,10 +44,11 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(new Date(value));
 }
 
-export default async function PropertyContextPage({ params }: PropertyContextPageProps) {
+export default async function PropertyContextPage({ params, searchParams }: PropertyContextPageProps) {
   if (!getSupabasePublicConfig()) redirect("/app");
 
   const { propertyId } = await params;
+  const requested = await searchParams;
   const supabase = await createSupabaseServerClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   if (!claimsData?.claims) redirect("/sign-in");
@@ -60,17 +62,18 @@ export default async function PropertyContextPage({ params }: PropertyContextPag
   if (!property) notFound();
 
   const propertyContext = property as PropertyContext;
-  const [organizationResult, inventoryResult, allocationsResult, complaintsResult, enquiriesResult, casesResult, whatsappResult, whatsappUnreadResult] = await Promise.all([
+  const [organizationResult, inventoryResult, allocationsResult, tasksResult, complaintsResult, enquiriesResult, casesResult, whatsappResult, whatsappUnreadResult] = await Promise.all([
     supabase.from("organizations").select("name, lifecycle_state").eq("id", propertyContext.organization_id).maybeSingle(),
-    supabase.from("inventory_units").select("id,status").eq("property_id", propertyId),
-    supabase.from("reservation_allocations").select("stay_period,status,reservations(status,booked_amount_minor)").eq("property_id", propertyId).limit(2000),
+    supabase.from("inventory_units").select("id,unit_code,display_name,unit_kind,category,floor_label,max_occupancy,status,operational_state,housekeeping_assignee,nightly_rate_minor").eq("property_id", propertyId).order("unit_code"),
+    supabase.from("reservation_allocations").select("inventory_unit_id,stay_period,status,reservations(id,booking_reference,primary_guest_name,primary_guest_phone,adults,children,source,status,booked_amount_minor)").eq("property_id", propertyId).limit(2000),
+    supabase.from("property_tasks").select("id,inventory_unit_id,title,task_type,status,priority,assigned_to_label").eq("property_id", propertyId).not("status", "in", "(completed,closed,cancelled)").limit(1000),
     supabase.from("operational_cases").select("id", { count: "exact", head: true }).eq("property_id", propertyId).eq("case_type", "complaint").in("status", ["open", "in_progress", "waiting"]),
     supabase.from("operational_cases").select("id", { count: "exact", head: true }).eq("property_id", propertyId).eq("case_type", "enquiry").in("status", ["open", "in_progress", "waiting"]),
     supabase.from("operational_cases").select("id, case_type, subject, priority, status, source, created_at").eq("property_id", propertyId).in("status", ["open", "in_progress", "waiting"]).order("created_at", { ascending: false }).limit(5),
     supabase.from("whatsapp_conversations").select("id, guest_name, unread_count, last_message_preview, last_message_at").eq("property_id", propertyId).eq("status", "active").order("last_message_at", { ascending: false, nullsFirst: false }).limit(8),
     supabase.from("whatsapp_conversations").select("unread_count").eq("property_id", propertyId).eq("status", "active"),
   ]);
-  if ([organizationResult, inventoryResult, allocationsResult, complaintsResult, enquiriesResult, casesResult, whatsappResult, whatsappUnreadResult].some((result) => result.error)) {
+  if ([organizationResult, inventoryResult, allocationsResult, tasksResult, complaintsResult, enquiriesResult, casesResult, whatsappResult, whatsappUnreadResult].some((result) => result.error)) {
     throw new Error("Property dashboard could not be loaded.");
   }
   if (!organizationResult.data) notFound();
@@ -79,8 +82,10 @@ export default async function PropertyContextPage({ params }: PropertyContextPag
   const recentCases = (casesResult.data ?? []) as OperationalCase[];
   const conversations = (whatsappResult.data ?? []) as WhatsAppConversation[];
   const unreadWhatsApp = (whatsappUnreadResult.data ?? []).reduce((total, row) => total + Number(row.unread_count ?? 0), 0);
-  const units = inventoryResult.data ?? [];
-  const allocations = (allocationsResult.data ?? []) as unknown as DashboardAllocation[];
+  const units = (inventoryResult.data ?? []) as SuperViewUnit[];
+  const superViewAllocations = (allocationsResult.data ?? []) as unknown as SuperViewAllocation[];
+  const tasks = (tasksResult.data ?? []) as SuperViewTask[];
+  const allocations = superViewAllocations as unknown as DashboardAllocation[];
   const activeAllocations = allocations.filter((item) => ["confirmed", "checked_in"].includes(item.status) && !["cancelled", "no_show"].includes(item.reservations?.status ?? ""));
   const email = typeof claimsData.claims.email === "string" ? claimsData.claims.email : "Property owner";
   const today = new Intl.DateTimeFormat("en-IN", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
@@ -120,6 +125,8 @@ export default async function PropertyContextPage({ params }: PropertyContextPag
               <article key={label} data-tone={tone}><span><Icon aria-hidden="true" /></span><div><small>{label}</small><strong>{value}</strong><p>{copy}</p></div></article>
             ))}
           </section>
+
+          <SuperViewBoard propertyId={propertyId} inventoryMode={propertyContext.inventory_unit} currencyCode={propertyContext.currency_code} units={units} allocations={superViewAllocations} tasks={tasks} todayIso={todayIso} requested={requested} />
 
           <PropertyDashboardCharts data={chartData} />
 
