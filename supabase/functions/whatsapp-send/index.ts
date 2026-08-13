@@ -14,10 +14,13 @@ Deno.serve(async (request) => {
     const body = await request.json() as {
       conversationId?: string;
       text?: string;
-      type?: "text" | "template";
+      type?: "text" | "template" | "image" | "document" | "audio" | "video";
       templateName?: string;
       templateLanguage?: string;
       components?: unknown[];
+      mediaPath?: string;
+      mediaType?: "image" | "document" | "audio" | "video";
+      fileName?: string;
       requestId?: string;
     };
     const client = userClient(authorization);
@@ -30,6 +33,9 @@ Deno.serve(async (request) => {
       requested_template_name: body.templateName ?? null,
       requested_template_language: body.templateLanguage ?? null,
       request_id: requestId,
+      requested_media_path: body.mediaPath ?? null,
+      requested_media_type: body.mediaType ?? null,
+      requested_file_name: body.fileName ?? null,
     }).single();
     if (prepareError || !preparedData) return json({ error: prepareError?.message ?? "Could not prepare message." }, 403, cors);
     const prepared = preparedData as Prepared;
@@ -40,8 +46,9 @@ Deno.serve(async (request) => {
       }).single();
       if (configError || !configData) throw new Error("WhatsApp credentials are unavailable.");
       const config = configData as ServiceConfig;
-      const payload = body.type === "template"
-        ? {
+      let payload: Record<string, unknown>;
+      if (body.type === "template") {
+        payload = {
           messaging_product: "whatsapp",
           to: prepared.recipient,
           type: "template",
@@ -50,8 +57,22 @@ Deno.serve(async (request) => {
             language: { code: body.templateLanguage ?? "en_US" },
             ...(body.components?.length ? { components: body.components } : {}),
           },
-          }
-        : { messaging_product: "whatsapp", to: prepared.recipient, type: "text", text: { preview_url: false, body: body.text } };
+        };
+      } else if (body.type && ["image", "document", "audio", "video"].includes(body.type)) {
+        if (!body.mediaPath || body.mediaType !== body.type) throw new Error("Valid media details are required.");
+        const { data: signedMedia, error: signedMediaError } = await service.storage
+          .from("whatsapp-media")
+          .createSignedUrl(body.mediaPath, 10 * 60);
+        if (signedMediaError || !signedMedia?.signedUrl) throw new Error("WhatsApp media could not be prepared.");
+        const media = {
+          link: signedMedia.signedUrl,
+          ...(body.type === "document" && body.fileName ? { filename: body.fileName } : {}),
+          ...(body.text?.trim() && body.type !== "audio" ? { caption: body.text.trim().slice(0, 1024) } : {}),
+        };
+        payload = { messaging_product: "whatsapp", to: prepared.recipient, type: body.type, [body.type]: media };
+      } else {
+        payload = { messaging_product: "whatsapp", to: prepared.recipient, type: "text", text: { preview_url: false, body: body.text } };
+      }
       const result = await graphRequest<{ messages?: Array<{ id?: string }> }>(
         `https://graph.facebook.com/${prepared.graph_api_version}/${prepared.phone_number_id}/messages`,
         config.access_token,
@@ -63,7 +84,7 @@ Deno.serve(async (request) => {
       await service.from("whatsapp_conversations").update({
         state: "direct_chat",
         unread_count: 0,
-        last_message_preview: (body.text || `Template: ${body.templateName}`).slice(0, 400),
+        last_message_preview: (body.text || body.fileName || `Template: ${body.templateName}`).slice(0, 400),
         last_message_at: new Date().toISOString(),
         direct_chat_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       }).eq("id", body.conversationId);
