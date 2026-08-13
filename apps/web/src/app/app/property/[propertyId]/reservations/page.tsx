@@ -110,7 +110,7 @@ export default async function PropertyReservationsPage({ params, searchParams }:
               <div className="reservation-guest"><small>{reservation.booking_reference}</small><strong>{reservation.primary_guest_name}</strong><p>{reservation.primary_guest_phone} · {reservation.adults + reservation.children} guest{reservation.adults + reservation.children === 1 ? "" : "s"}</p></div>
               <div className="reservation-unit"><small>{noun}</small><strong>{allocation?.inventory_units?.unit_code ?? "Unassigned"}</strong><p>{allocation?.inventory_units?.display_name}</p></div>
               <div className="reservation-dates"><small>Stay</small><strong>{displayDate(stay.checkIn)} → {displayDate(stay.checkOut)}</strong><p>{pretty(reservation.source)}</p></div>
-              <div className="reservation-state"><span className={`status-pill ${reservation.status}`}>{pretty(reservation.status)}</span><ReservationStatusActions propertyId={propertyId} reservationId={reservation.id} status={reservation.status} /></div>
+              <div className="reservation-state"><span className={`status-pill ${reservation.status}`}>{pretty(reservation.status)}</span><ReservationStatusActions propertyId={propertyId} reservationId={reservation.id} status={reservation.status} /><Link className="reservation-open-link" href={`/app/property/${propertyId}/reservations/${reservation.id}`}>Open stay</Link></div>
             </article>;
           })}</div> : <div className="reservation-empty"><BedDouble aria-hidden="true" /><h3>No reservations found</h3><p>{units.length ? "Create the first guest reservation from the form above." : `Add your first ${noun} to start taking bookings.`}</p></div>}
         </section>
