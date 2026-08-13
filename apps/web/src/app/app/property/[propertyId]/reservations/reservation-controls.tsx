@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useRef, useState } from "react";
 import { BedDouble, CalendarPlus, DoorOpen, Plus, UsersRound } from "lucide-react";
 import { changeReservationStatus, createInventoryUnit, createReservation, type ReservationActionState } from "./actions";
 
@@ -17,6 +17,7 @@ export function ReservationCreationControls({ propertyId, inventoryUnit, units }
   const [reservationState, reservationAction, reservationPending] = useActionState(createReservation, initialState);
   const inventoryDetails = useRef<HTMLDetailsElement>(null);
   const bookingDetails = useRef<HTMLDetailsElement>(null);
+  const [commandKey] = useState(() => crypto.randomUUID());
   const noun = inventoryUnit === "beds" ? "bed" : "room";
   const availableUnits = units.filter((unit) => unit.status === "available");
 
@@ -43,6 +44,7 @@ export function ReservationCreationControls({ propertyId, inventoryUnit, units }
         <summary><span><CalendarPlus aria-hidden="true" /></span><div><small>NEW BOOKING</small><strong>Create reservation</strong><p>Allocate one available {noun} to a guest.</p></div><Plus aria-hidden="true" /></summary>
         <form action={reservationAction}>
           <input type="hidden" name="propertyId" value={propertyId} />
+          <input type="hidden" name="commandKey" value={reservationState.commandKey ?? commandKey} />
           <div className="reservation-form-grid">
             <label className="full-span">Select {noun}<select name="inventoryUnitId" required defaultValue=""><option value="" disabled>{availableUnits.length ? `Choose an available ${noun}` : `Add an available ${noun} first`}</option>{availableUnits.map((unit) => <option key={unit.id} value={unit.id}>{unit.unit_code} · {unit.display_name} · up to {unit.max_occupancy}</option>)}</select></label>
             <label>Guest name<input name="guestName" autoComplete="name" required /></label>
@@ -52,6 +54,7 @@ export function ReservationCreationControls({ propertyId, inventoryUnit, units }
             <label>Adults<input name="adults" type="number" min="1" max="50" defaultValue="1" required /></label>
             <label>Children<input name="children" type="number" min="0" max="50" defaultValue="0" required /></label>
             <label>Booking source<select name="source" defaultValue="front_desk"><option value="front_desk">Front desk</option><option value="walk_in">Walk-in</option><option value="phone">Phone</option><option value="whatsapp">WhatsApp</option><option value="web">Website</option><option value="other">Other</option></select></label>
+            <label>External booking ID <small>optional</small><input name="externalBookingId" maxLength={120} placeholder="OTA or channel reference" /></label>
             <label className="full-span">Internal note<textarea name="notes" rows={3} placeholder="Arrival time or special request" /></label>
           </div>
           <ActionMessage state={reservationState} />
@@ -64,9 +67,10 @@ export function ReservationCreationControls({ propertyId, inventoryUnit, units }
 
 export function ReservationStatusActions({ propertyId, reservationId, status }: { propertyId: string; reservationId: string; status: string }) {
   const [state, action, pending] = useActionState(changeReservationStatus, initialState);
+  const [commandKey] = useState(() => crypto.randomUUID());
   const actions = status === "confirmed"
     ? [{ value: "checked_in", label: "Check in", Icon: UsersRound }, { value: "no_show", label: "No-show", Icon: BedDouble }, { value: "cancel", label: "Cancel", Icon: DoorOpen }]
     : status === "checked_in" ? [{ value: "checked_out", label: "Check out", Icon: DoorOpen }] : [];
   if (!actions.length) return null;
-  return <form className="reservation-row-actions" action={action}><input type="hidden" name="propertyId" value={propertyId} /><input type="hidden" name="reservationId" value={reservationId} />{actions.map(({ value, label, Icon }) => <button key={value} name="action" value={value} disabled={pending} title={label}><Icon aria-hidden="true" /><span>{label}</span></button>)}<ActionMessage state={state} /></form>;
+  return <form className="reservation-row-actions" action={action}><input type="hidden" name="propertyId" value={propertyId} /><input type="hidden" name="reservationId" value={reservationId} /><input type="hidden" name="commandKey" value={state.commandKey ?? commandKey} />{actions.map(({ value, label, Icon }) => <button key={value} name="action" value={value} disabled={pending} title={label}><Icon aria-hidden="true" /><span>{label}</span></button>)}<ActionMessage state={state} /></form>;
 }

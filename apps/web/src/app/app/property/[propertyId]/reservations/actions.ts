@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export type ReservationActionState = { status: "idle" | "success" | "error"; message?: string };
+export type ReservationActionState = { status: "idle" | "success" | "error"; message?: string; commandKey?: string };
 
 function field(formData: FormData, name: string) {
   return String(formData.get(name) ?? "");
@@ -14,6 +14,8 @@ function actionError(error: { code?: string; message?: string }) {
   if (error.code === "42501") return "You do not have reservation access for this property.";
   if (error.code === "23P01") return "That room or bed is already allocated for these dates.";
   if (error.code === "23505") return "That unit code already exists in this property.";
+  if (error.code === "55P03") return "This action is already being processed. Refresh in a moment.";
+  if (error.code === "22023") return error.message || "This action key was already used with different details.";
   if (["23514", "22007"].includes(error.code ?? "")) return error.message || "The submitted details are not valid.";
   return "The action could not be completed. Refresh and try again.";
 }
@@ -67,6 +69,7 @@ const reservationSchema = z.object({
   children: z.coerce.number().int().min(0).max(50),
   source: z.enum(["front_desk", "phone", "whatsapp", "web", "walk_in", "other"]),
   notes: z.string().trim().max(2000),
+  commandKey: z.uuid(), externalBookingId: z.string().trim().max(120),
 }).refine((data) => data.checkOutDate > data.checkInDate, { message: "Check-out must be after check-in." });
 
 export async function createReservation(_state: ReservationActionState, formData: FormData): Promise<ReservationActionState> {
@@ -76,35 +79,37 @@ export async function createReservation(_state: ReservationActionState, formData
     checkInDate: field(formData, "checkInDate"), checkOutDate: field(formData, "checkOutDate"),
     adults: field(formData, "adults"), children: field(formData, "children") || "0",
     source: field(formData, "source"), notes: field(formData, "notes"),
+    commandKey: field(formData, "commandKey"), externalBookingId: field(formData, "externalBookingId"),
   });
   if (!parsed.success) return { status: "error", message: parsed.error.issues[0]?.message || "Check the booking details." };
 
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.rpc("create_property_reservation", {
+  const { data, error } = await supabase.rpc("create_property_reservation_idempotent", {
     target_property_id: parsed.data.propertyId, target_inventory_unit_id: parsed.data.inventoryUnitId,
     guest_name: parsed.data.guestName, guest_phone: parsed.data.guestPhone,
     check_in_date: parsed.data.checkInDate, check_out_date: parsed.data.checkOutDate,
     adult_count: parsed.data.adults, child_count: parsed.data.children,
     booking_source: parsed.data.source, reservation_notes: parsed.data.notes || null,
+    command_key: parsed.data.commandKey, external_reference: parsed.data.externalBookingId || null,
   });
   if (error) return { status: "error", message: actionError(error) };
   const reference = Array.isArray(data) ? (data[0] as { booking_reference?: string } | undefined)?.booking_reference : undefined;
   revalidatePath(`/app/property/${parsed.data.propertyId}/reservations`);
   revalidatePath(`/app/property/${parsed.data.propertyId}`);
-  return { status: "success", message: reference ? `Reservation ${reference} confirmed.` : "Reservation confirmed." };
+  return { status: "success", message: reference ? `Reservation ${reference} confirmed.` : "Reservation confirmed.", commandKey: crypto.randomUUID() };
 }
 
-const transitionSchema = z.object({ propertyId: z.uuid(), reservationId: z.uuid(), action: z.enum(["cancel", "checked_in", "checked_out", "no_show"]) });
+const transitionSchema = z.object({ propertyId: z.uuid(), reservationId: z.uuid(), commandKey: z.uuid(), action: z.enum(["cancel", "checked_in", "checked_out", "no_show"]) });
 
 export async function changeReservationStatus(_state: ReservationActionState, formData: FormData): Promise<ReservationActionState> {
-  const parsed = transitionSchema.safeParse({ propertyId: field(formData, "propertyId"), reservationId: field(formData, "reservationId"), action: field(formData, "action") });
+  const parsed = transitionSchema.safeParse({ propertyId: field(formData, "propertyId"), reservationId: field(formData, "reservationId"), commandKey: field(formData, "commandKey"), action: field(formData, "action") });
   if (!parsed.success) return { status: "error", message: "Reservation action is not valid." };
   const supabase = await createSupabaseServerClient();
   const { error } = parsed.data.action === "cancel"
     ? await supabase.rpc("cancel_property_reservation", { target_property_id: parsed.data.propertyId, target_reservation_id: parsed.data.reservationId })
-    : await supabase.rpc("transition_property_reservation", { target_property_id: parsed.data.propertyId, target_reservation_id: parsed.data.reservationId, next_status: parsed.data.action });
+    : await supabase.rpc("transition_property_reservation_idempotent", { target_property_id: parsed.data.propertyId, target_reservation_id: parsed.data.reservationId, next_status: parsed.data.action, command_key: parsed.data.commandKey, transition_reason: `Owner workspace marked ${parsed.data.action.replaceAll("_", " ")}` });
   if (error) return { status: "error", message: actionError(error) };
   revalidatePath(`/app/property/${parsed.data.propertyId}/reservations`);
   revalidatePath(`/app/property/${parsed.data.propertyId}`);
-  return { status: "success", message: `Reservation marked ${parsed.data.action.replaceAll("_", " ")}.` };
+  return { status: "success", message: `Reservation marked ${parsed.data.action.replaceAll("_", " ")}.`, commandKey: crypto.randomUUID() };
 }

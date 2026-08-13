@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(22);
+select plan(31);
 
 select has_table('public', 'inventory_units', 'sellable inventory table exists');
 select has_table('public', 'reservations', 'reservation table exists');
@@ -158,6 +158,90 @@ select lives_ok(
     'Replacement Guest', '+919876543213', '2026-09-02', '2026-09-04', 1, 0, 'phone', null
   )$$,
   'cancelled allocation releases the room dates'
+);
+
+select lives_ok(
+  $$insert into public.inventory_units (
+      id, organization_id, property_id, unit_code, display_name, unit_kind, category,
+      max_occupancy, nightly_rate_minor
+    ) values (
+      '7a000000-0000-0000-0000-000000000007', '73000000-0000-0000-0000-000000000007',
+      '74000000-0000-0000-0000-000000000007', '102', 'Room 102', 'room', 'Deluxe', 2, 300000
+    )$$,
+  'second room supports move and extension lifecycle tests'
+);
+
+select lives_ok(
+  $$select public.create_property_reservation_idempotent(
+    '74000000-0000-0000-0000-000000000007', '7a000000-0000-0000-0000-000000000007',
+    'Lifecycle Guest', '+919876543214', '2026-10-01', '2026-10-03', 2, 0, 'phone', null,
+    '8a000000-0000-0000-0000-000000000007', 'OTA-LIFECYCLE-1'
+  )$$,
+  'idempotent command creates the reservation once'
+);
+
+select lives_ok(
+  $$select public.create_property_reservation_idempotent(
+    '74000000-0000-0000-0000-000000000007', '7a000000-0000-0000-0000-000000000007',
+    'Lifecycle Guest', '+919876543214', '2026-10-01', '2026-10-03', 2, 0, 'phone', null,
+    '8a000000-0000-0000-0000-000000000007', 'OTA-LIFECYCLE-1'
+  )$$,
+  'retrying the same command safely returns its completed result'
+);
+
+select results_eq(
+  $$select count(*)::bigint from public.reservations where external_booking_id = 'OTA-LIFECYCLE-1'$$,
+  array[1::bigint],
+  'idempotent retry does not duplicate a reservation'
+);
+
+select lives_ok(
+  $$select public.extend_property_reservation(
+    '74000000-0000-0000-0000-000000000007',
+    (select id from public.reservations where external_booking_id = 'OTA-LIFECYCLE-1'),
+    '2026-10-04', '8b000000-0000-0000-0000-000000000007', 'Guest requested one more night'
+  )$$,
+  'stay extension validates availability and appends extra-night value'
+);
+
+select lives_ok(
+  $$select public.move_property_reservation(
+    '74000000-0000-0000-0000-000000000007',
+    (select id from public.reservations where external_booking_id = 'OTA-LIFECYCLE-1'),
+    '78000000-0000-0000-0000-000000000007',
+    '8c000000-0000-0000-0000-000000000007', 'Guest requested quieter room'
+  )$$,
+  'confirmed stay can move atomically to available inventory'
+);
+
+select lives_ok(
+  $$update public.inventory_units set operational_state = 'ready'
+    where id = '78000000-0000-0000-0000-000000000007';
+    select public.transition_property_reservation_idempotent(
+      '74000000-0000-0000-0000-000000000007',
+      (select id from public.reservations where external_booking_id = 'OTA-LIFECYCLE-1'),
+      'checked_in', '8d000000-0000-0000-0000-000000000007', 'Front desk verified arrival'
+    )$$,
+  'check-in requires ready inventory and activates the allocation'
+);
+
+select lives_ok(
+  $$select public.transition_property_reservation_idempotent(
+    '74000000-0000-0000-0000-000000000007',
+    (select id from public.reservations where external_booking_id = 'OTA-LIFECYCLE-1'),
+    'checked_out', '8e000000-0000-0000-0000-000000000007', 'Front desk completed checkout'
+  )$$,
+  'checkout atomically completes the stay'
+);
+
+select results_eq(
+  $$select inventory_units.operational_state || ':' || property_tasks.source
+    from public.inventory_units
+    join public.property_tasks on property_tasks.inventory_unit_id = inventory_units.id
+    where inventory_units.id = '78000000-0000-0000-0000-000000000007'
+      and property_tasks.source = 'checkout'$$,
+  array['dirty:checkout'::text],
+  'checkout leaves inventory dirty and creates housekeeping work'
 );
 
 select results_eq(
