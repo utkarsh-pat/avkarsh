@@ -115,11 +115,11 @@ export default async function PropertyContextPage({ params }: PropertyContextPag
               {conversations.length ? (
                 <div className="owner-whatsapp-feed">
                   {conversations.slice(0, 5).map((conversation) => (
-                    <div key={conversation.id}>
+                    <Link key={conversation.id} href={`/app/property/${propertyId}/whatsapp?conversation=${conversation.id}`}>
                       <span><MessageCircleMore aria-hidden="true" /></span>
                       <div><strong>{conversation.guest_name}</strong><p>{conversation.last_message_preview || "Conversation started"}</p></div>
                       {conversation.unread_count > 0 ? <b>{conversation.unread_count}</b> : null}
-                    </div>
+                    </Link>
                   ))}
                 </div>
               ) : <div className="owner-panel-empty"><MessageCircleMore aria-hidden="true" /><strong>Inbox is clear</strong><p>Guest WhatsApp conversations will appear here.</p></div>}
