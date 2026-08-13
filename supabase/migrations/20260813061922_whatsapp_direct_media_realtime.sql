@@ -152,6 +152,35 @@ $$;
 revoke all on function public.prepare_whatsapp_outbound(uuid, text, text, text, text, uuid, text, text, text) from public, anon;
 grant execute on function public.prepare_whatsapp_outbound(uuid, text, text, text, text, uuid, text, text, text) to authenticated;
 
+create function public.prepare_whatsapp_outbound(
+  target_conversation_id uuid,
+  message_body text,
+  requested_type text default 'text',
+  requested_template_name text default null,
+  requested_template_language text default null,
+  request_id uuid default gen_random_uuid()
+)
+returns table(message_id uuid, config_id uuid, recipient text, phone_number_id text, graph_api_version text)
+language sql
+security invoker
+set search_path = ''
+as $$
+  select * from public.prepare_whatsapp_outbound(
+    target_conversation_id,
+    message_body,
+    requested_type,
+    requested_template_name,
+    requested_template_language,
+    request_id,
+    null,
+    null,
+    null
+  )
+$$;
+
+revoke all on function public.prepare_whatsapp_outbound(uuid, text, text, text, text, uuid) from public, anon;
+grant execute on function public.prepare_whatsapp_outbound(uuid, text, text, text, text, uuid) to authenticated;
+
 do $$
 begin
   if not exists (
