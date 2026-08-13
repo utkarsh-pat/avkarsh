@@ -1,32 +1,55 @@
-# Design QA
+**Source visual truth**
 
-- Source visual truth: `C:/Users/utkar/AppData/Local/Temp/codex-clipboard-dedfb380-654f-4594-ad40-8f91c095ffeb.png`, `C:/Users/utkar/AppData/Local/Temp/codex-clipboard-8f6c573c-989f-4550-bcfd-aed914916d0c.png`, and the WhatsApp Direct implementation in `S:/ServiZephyrTheRealBot/src/app/owner-dashboard/whatsapp-direct/page.js`.
-- Target: Avkarsh property-owner live dashboard and room/bed control board, with the existing authenticated navigation and WhatsApp Direct patterns preserved.
-- Design language: existing royal-dark-blue Avkarsh tokens with the compact operational density and three-pane chat structure of ServiZephyr.
+- `C:\Users\utkar\AppData\Local\Temp\codex-clipboard-fb69d39a-a8b8-4cf4-8a38-5e6767ca77d6.png`
+- Source pixels: 734 × 635.
+- Selected state: desktop light-theme Floor Command Board; room context opens only after a unit selection.
 
-## Implementation review
+**Implementation evidence**
 
-- The mobile app bar uses a centered 40 px hamburger target, an absolutely centered property title, and right-aligned theme/profile controls without overlap.
-- Desktop and mobile profile menus expose the authenticated email and a working logout action.
-- Theme switching lives in the header; no duplicate floating control is rendered inside authenticated app routes.
-- WhatsApp Direct uses a responsive inbox/thread/profile layout with active/archive and tag filters, unread state, message delivery state, guest notes, and archive controls.
-- The WhatsApp thread becomes a single focused surface on narrow screens and provides an explicit back action to the inbox.
-- Reservations use room terminology for hotels and bed terminology for dormitory inventory.
-- Inventory is represented as responsive operational cards containing unit status, zone, capacity, nightly rate, current guest, current stay actions, and next arrival.
-- Dashboard metrics use the same compact operational-card pattern as the existing Avkarsh owner surface, with two responsive Recharts panels for booked revenue and occupancy.
+- Route: `/app/property/[propertyId]`
+- Intended desktop viewport: 1440 × 1000 CSS px at device scale factor 1.
+- Browser-rendered screenshot: unavailable. The in-app browser screenshot command timed out and the connected Chrome surface was unavailable.
+- Build evidence: `pnpm verify:web` passed, including lint, TypeScript, tests, and production build.
+- Primary interactions represented in code: status filters, floor/type/search filters, card/timeline/calendar views, new-booking link, unit selection, selected-unit drawer close, create-task and view-stays links.
+- Console errors: not checked because browser rendering was unavailable.
 
-## Functional and data checks
+**Full-view comparison evidence**
 
-- Inventory, reservations, allocations, WhatsApp conversations, messages, guest details, and media objects remain property-scoped through RLS permission checks.
-- Reservation overlap prevention is enforced by a PostgreSQL exclusion constraint, not only in the UI.
-- WhatsApp supports live inbox refresh, Meta's 24-hour reply window, approved templates, and image/video/audio/document attachments up to 25 MB in a private Supabase Storage bucket.
-- Full web verification passed: lint, TypeScript, 16 unit tests, and Next.js production build.
-- Occupancy, in-house, arrivals, departures, booked revenue, complaints, enquiries, and unread WhatsApp values are derived from property-scoped live tables.
-- Revenue is gross booked accommodation value captured from the nightly unit rate and stay length; it is intentionally not a payment or subscription ledger.
-- Database migrations and pgTAP tests are delegated to the GitHub CI Supabase job because Docker is unavailable on this workstation.
+- Source was opened and inspected at original resolution.
+- Implementation could not be captured in the same authenticated property state, so a normalized visual comparison is blocked.
 
-## Visual verification status
+**Focused region comparison evidence**
 
-The required authenticated Chrome visual capture is blocked because the selected Chrome profile is not currently available to the Codex browser connection. Product Design policy prevents switching to another browser/profile or creating a temporary bypass route.
+- Source regions inspected: compact command-board header, filter row, four-column floor grid, semantic state rails, and selection-only right context panel.
+- Matching implementation regions could not be browser-captured.
+
+**Findings**
+
+- [P1] Visual fidelity cannot be confirmed without an authenticated browser render.
+  - Location: complete Super View route.
+  - Evidence: source is available; implementation screenshot is not.
+  - Impact: density, wrapping, responsive behavior, and selected drawer proportions cannot be judged reliably from source code alone.
+  - Fix: open the authenticated property route, capture desktop and mobile screenshots, compare them with the selected source, and correct any P1/P2 drift.
+
+**Required fidelity surfaces**
+
+- Fonts and typography: code uses the existing Avkarsh font system; visual match is unverified.
+- Spacing and layout rhythm: compact dimensions and four-column grid implemented; visual match is unverified.
+- Colors and visual tokens: existing royal-blue tokens plus semantic state colors retained; visual match is unverified.
+- Image quality and asset fidelity: the target contains no raster assets; Lucide library icons are used consistently.
+- Copy and content: Floor Command Board, date, filters, live unit data, and selection-only context match the intended product behavior.
+
+**Comparison history**
+
+- Initial implementation moved analytics signals out of Super View and compacted the operational board.
+- Selected reference then refined the target to a denser four-column floor board with a selection-only context panel.
+- Code was updated to this target, but post-fix visual evidence remains unavailable.
+
+**Implementation checklist**
+
+- Capture authenticated desktop board with no selected unit.
+- Select one room and capture the context drawer state.
+- Capture mobile board and drawer/sheet state.
+- Fix all resulting P1/P2 layout differences before marking the visual QA passed.
 
 final result: blocked
