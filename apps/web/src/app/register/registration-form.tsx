@@ -37,8 +37,8 @@ type RegistrationFormProps = {
 
 const initialState: OnboardingActionState = { status: "idle" };
 const supportEmail = "ceoutkarshpatel@gmail.com";
-const supportPhoneDisplay = "+91 90278 72803";
-const supportPhoneDigits = "919027872803";
+const supportPhoneDisplay = "+91 89220 35716";
+const supportPhoneDigits = "918922035716";
 
 const requesterIcons = {
   property_owner: Building2,

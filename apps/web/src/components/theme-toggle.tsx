@@ -11,8 +11,8 @@ function currentTheme(): Theme {
 export function ThemeToggle() {
   const pathname = usePathname();
 
-  // The admin shell already provides a theme control in its top bar.
-  if (pathname.startsWith("/admin")) return null;
+  // Authenticated shells already provide a theme control in their top bar.
+  if (pathname.startsWith("/admin") || pathname.startsWith("/app")) return null;
 
   function toggleTheme() {
     const next = currentTheme() === "dark" ? "light" : "dark";
