@@ -23,10 +23,10 @@ export function AppShell({ children, email, isPlatformAdmin, property }: AppShel
   }, [open]);
 
   const links = [
-    { href: "/app", label: "Workspace", mark: "W" },
-    ...(property ? [{ href: `/app/property/${property.id}`, label: property.name, mark: property.code.slice(0, 2) }] : []),
+    ...(!property ? [{ href: "/app", label: "Workspace", mark: "W" }] : []),
+    ...(property ? [{ href: `/app/property/${property.id}`, label: "Dashboard", mark: "D" }] : []),
     ...(property ? [{ href: `/app/property/${property.id}/team`, label: "Team access", mark: "T" }] : []),
-    { href: "/register", label: "New property", mark: "+" },
+    ...(!property ? [{ href: "/register", label: "New property", mark: "+" }] : []),
     ...(isPlatformAdmin ? [{ href: "/admin/onboarding", label: "SaaS control", mark: "A" }] : []),
   ];
 

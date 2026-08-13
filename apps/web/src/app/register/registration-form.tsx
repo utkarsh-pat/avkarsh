@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { ArrowRight, BriefcaseBusiness, Building2, Link2 } from "lucide-react";
+import {
+  ArrowRight, Ban, BriefcaseBusiness, Building2, Check, CheckCircle2,
+  Clock3, Copy, Home, Link2, Mail, MessageCircleMore, Phone, ShieldCheck, XCircle,
+} from "lucide-react";
 import { useActionState, useState } from "react";
 import {
   emptyInternationalPhone,
@@ -33,6 +36,9 @@ type RegistrationFormProps = {
 };
 
 const initialState: OnboardingActionState = { status: "idle" };
+const supportEmail = "ceoutkarshpatel@gmail.com";
+const supportPhoneDisplay = "+91 90278 72803";
+const supportPhoneDigits = "919027872803";
 
 const requesterIcons = {
   property_owner: Building2,
@@ -43,6 +49,73 @@ function formatStatus(status: string) {
   return status.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
 }
 
+function formatRequestDate(value: string) {
+  return new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" }).format(new Date(value));
+}
+
+function requestStatusMeta(status: string) {
+  if (status === "approved") return { label: "Approved", Icon: CheckCircle2, tone: "approved", copy: "Access is ready." };
+  if (status === "rejected") return { label: "Rejected", Icon: XCircle, tone: "rejected", copy: "Review is complete." };
+  if (status === "revoked") return { label: "Revoked", Icon: Ban, tone: "revoked", copy: "Access has been withdrawn." };
+  if (status === "under_review") return { label: "Under review", Icon: ShieldCheck, tone: "under-review", copy: "The team is checking your details." };
+  return { label: formatStatus(status), Icon: Clock3, tone: "pending", copy: "Waiting for the review team." };
+}
+
+function ExistingRequestsPanel({ requests, className = "" }: { requests: ExistingRequest[]; className?: string }) {
+  return (
+    <aside className={`existing-requests ${className}`.trim()} aria-label="Your existing requests">
+      <div className="existing-requests-heading"><strong>Your recent requests</strong><small>Live application status</small></div>
+      <div className="existing-request-list">
+        {requests.map((request) => {
+          const status = requestStatusMeta(request.status);
+          const StatusIcon = status.Icon;
+          return (
+            <div className="existing-request-row" key={request.id}>
+              <span className={`request-status-icon ${status.tone}`} aria-hidden="true"><StatusIcon size={18} /></span>
+              <div className="existing-request-copy"><strong>{request.property_name}</strong><small>{status.copy} · {formatRequestDate(request.created_at)}</small></div>
+              <span className={`request-status-pill ${status.tone}`}><StatusIcon size={13} />{status.label}</span>
+            </div>
+          );
+        })}
+      </div>
+    </aside>
+  );
+}
+
+function ActiveRequestStatus({ request }: { request: ExistingRequest }) {
+  const status = requestStatusMeta(request.status);
+  const StatusIcon = status.Icon;
+  const whatsappMessage = encodeURIComponent(`Hi Avkarsh, I need help with my ${request.property_name} onboarding request (${request.id}).`);
+
+  return (
+    <section className="request-waiting-screen" aria-labelledby="request-waiting-title">
+      <div className="request-waiting-hero">
+        <span className={`request-status-pill ${status.tone}`}><StatusIcon size={15} />{status.label}</span>
+        <p className="eyebrow">PROPERTY ONBOARDING</p>
+        <h1 id="request-waiting-title">Your request is {request.status === "under_review" ? "being reviewed." : "in the review queue."}</h1>
+        <p>We have your details for <strong>{request.property_name}</strong>. You do not need to fill the form again. We will contact you if anything else is needed.</p>
+      </div>
+
+      <div className="request-waiting-card">
+        <div className="request-waiting-summary">
+          <div><small>Property</small><strong>{request.property_name}</strong></div>
+          <div><small>Submitted</small><strong>{formatRequestDate(request.created_at)}</strong></div>
+          <div><small>Request reference</small><code>{request.id}</code></div>
+        </div>
+
+        <div className="request-contact-panel">
+          <div><p className="eyebrow">NEED HELP?</p><h2>Talk to the Avkarsh team.</h2><p>For corrections, verification questions, or an urgent update, reach us directly.</p></div>
+          <div className="request-contact-actions">
+            <a className="button primary" href={`https://wa.me/${supportPhoneDigits}?text=${whatsappMessage}`} target="_blank" rel="noreferrer"><MessageCircleMore size={18} /> WhatsApp us</a>
+            <a className="button secondary" href={`tel:+${supportPhoneDigits}`}><Phone size={18} /> {supportPhoneDisplay}</a>
+            <a className="button secondary" href={`mailto:${supportEmail}?subject=${encodeURIComponent(`Avkarsh onboarding · ${request.property_name}`)}`}><Mail size={18} /> Email us</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function RegistrationForm({ identity, existingRequests }: RegistrationFormProps) {
   const [requesterKind, setRequesterKind] = useState("");
   const [contactPhone, setContactPhone] = useState<InternationalPhoneValue>(emptyInternationalPhone);
@@ -50,31 +123,73 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
   const [sameWhatsappNumber, setSameWhatsappNumber] = useState(false);
   const [propertyLocation, setPropertyLocation] = useState<PropertyLocation | null>(null);
   const [propertyType, setPropertyType] = useState("hotel");
+  const [copiedReference, setCopiedReference] = useState(false);
   const inventoryUnit = ["hostel", "dormitory"].includes(propertyType) ? "beds" : "rooms";
   const [state, formAction, isPending] = useActionState(submitOnboardingRequest, initialState);
+  const activeRequest = existingRequests.find((request) => request.status === "pending" || request.status === "under_review");
+
+  if (activeRequest && state.status !== "success") {
+    return <ActiveRequestStatus request={activeRequest} />;
+  }
 
   if (state.status === "success") {
     return (
       <section className="registration-success" aria-labelledby="request-received-title">
-        <span className="success-mark" aria-hidden="true">✓</span>
-        <p className="eyebrow">REQUEST RECEIVED</p>
-        <h1 id="request-received-title">Your property is in the review queue.</h1>
-        <p>{state.message}</p>
-        <dl className="request-receipt">
-          <div><dt>Request reference</dt><dd>{state.requestId}</dd></div>
-          <div><dt>Next step</dt><dd>Admin review, permissions, and subscription setup</dd></div>
-        </dl>
-        <div className="actions">
-          {identity ? <Link className="button primary" href="/app">Open workspace</Link> : (
-            <Link className="button primary" href="/sign-in?next=/register">Sign in with the same email</Link>
-          )}
-          <Link className="button secondary" href="/">Back home</Link>
+        <div className="success-hero">
+          <span className="success-mark" aria-hidden="true"><Check size={28} strokeWidth={2.6} /></span>
+          <p className="eyebrow">REQUEST RECEIVED</p>
+          <h1 id="request-received-title">Your property is now in review.</h1>
+          <p>{state.message}</p>
+          <div className="success-current-status">
+            <span aria-hidden="true"><Clock3 size={20} /></span>
+            <div><small>Current status</small><strong>Pending review</strong></div>
+          </div>
+        </div>
+
+        <div className="success-summary-card">
+          <div className="success-summary-heading">
+            <span aria-hidden="true"><ShieldCheck size={21} /></span>
+            <div><strong>Request saved securely</strong><small>Keep this reference for future communication.</small></div>
+          </div>
+          <div className="request-reference">
+            <div><small>Request reference</small><code>{state.requestId}</code></div>
+            <button
+              type="button"
+              aria-label="Copy request reference"
+              onClick={async () => {
+                if (!state.requestId) return;
+                try {
+                  await navigator.clipboard.writeText(state.requestId);
+                  setCopiedReference(true);
+                  window.setTimeout(() => setCopiedReference(false), 1800);
+                } catch {
+                  setCopiedReference(false);
+                }
+              }}
+            >
+              {copiedReference ? <Check size={18} /> : <Copy size={18} />}
+              <span>{copiedReference ? "Copied" : "Copy"}</span>
+            </button>
+          </div>
+          <div className="review-timeline" aria-label="What happens next">
+            <div className="complete"><span><Check size={14} /></span><div><strong>Request received</strong><small>Your details are safely recorded.</small></div></div>
+            <div className="active"><span>2</span><div><strong>Admin review</strong><small>We verify the property and discuss requirements.</small></div></div>
+            <div><span>3</span><div><strong>Access decision</strong><small>You will see approved or rejected status here.</small></div></div>
+          </div>
+          <p className="success-note">No further action is needed right now. We will contact you if any detail needs clarification.</p>
+          <div className="success-actions">
+            {identity ? <Link className="button primary" href="/app">View request status <ArrowRight size={17} /></Link> : (
+              <Link className="button primary" href="/sign-in?next=/register">Sign in to track status <ArrowRight size={17} /></Link>
+            )}
+            <Link className="button secondary" href="/"><Home size={17} /> Back home</Link>
+          </div>
         </div>
       </section>
     );
   }
 
   if (!requesterKind) {
+    const revokedRequests = existingRequests.filter((request) => request.status === "revoked");
     return (
       <section className="identity-step" aria-labelledby="identity-step-title">
         <p className="eyebrow">BEFORE WE BEGIN</p>
@@ -86,14 +201,7 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
             <div><strong>{identity.name || "Signed-in user"}</strong><small>{identity.email}</small></div>
           </div>
         ) : null}
-        {existingRequests.length > 0 ? (
-          <aside className="existing-requests role-step-requests" aria-label="Your existing requests">
-            <strong>Your recent requests</strong>
-            {existingRequests.map((request) => (
-              <span key={request.id}>{request.property_name} · {formatStatus(request.status)}{request.approved_plan ? ` · ${request.approved_plan}` : ""}</span>
-            ))}
-          </aside>
-        ) : null}
+        {revokedRequests.length > 0 ? <ExistingRequestsPanel requests={revokedRequests} /> : null}
         <div className="identity-grid">
           {requesterKinds.map((kind) => {
             const RoleIcon = requesterIcons[kind.value];
@@ -132,15 +240,6 @@ export function RegistrationForm({ identity, existingRequests }: RegistrationFor
           <button className="text-button" type="button" onClick={() => setRequesterKind("")}>← Change relationship</button>
         )}
       </div>
-
-      {existingRequests.length > 0 ? (
-        <aside className="existing-requests" aria-label="Your existing requests">
-          <strong>Your recent requests</strong>
-          {existingRequests.map((request) => (
-            <span key={request.id}>{request.property_name} · {formatStatus(request.status)}{request.approved_plan ? ` · ${request.approved_plan}` : ""}</span>
-          ))}
-        </aside>
-      ) : null}
 
       <form action={formAction} className="registration-form">
         <input type="hidden" name="requesterKind" value={requesterKind} />

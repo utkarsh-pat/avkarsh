@@ -1,45 +1,12 @@
-import Link from "next/link";
+import { CheckCircle2, CircleHelp, ClipboardList, MessageCircleMore, UsersRound } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
+import { AppShell } from "@/components/app-shell";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { workspaceModules } from "@/lib/workspace-modules";
-import { AppShell } from "@/components/app-shell";
 
-type PropertyContextPageProps = {
-  params: Promise<{ propertyId: string }>;
-};
-
-type PropertyContext = {
-  id: string;
-  organization_id: string;
-  name: string;
-  code: string;
-  timezone: string;
-  currency_code: string;
-};
-
-type OrganizationContext = {
-  name: string;
-  lifecycle_state: string;
-};
-
-type WorkspaceAccess = {
-  permission_key: string;
-  allowed: boolean;
-  decision: string;
-};
-
-type SubscriptionContext = {
-  plan_code: string;
-  status: string;
-  property_limit: number;
-  staff_limit: number;
-  trial_ends_at: string | null;
-};
-
-function formatState(state: string) {
-  return state.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
-}
+type PropertyContextPageProps = { params: Promise<{ propertyId: string }> };
+type PropertyContext = { id: string; organization_id: string; name: string; code: string };
+type OrganizationContext = { name: string; lifecycle_state: string };
 
 export default async function PropertyContextPage({ params }: PropertyContextPageProps) {
   if (!getSupabasePublicConfig()) redirect("/app");
@@ -47,98 +14,69 @@ export default async function PropertyContextPage({ params }: PropertyContextPag
   const { propertyId } = await params;
   const supabase = await createSupabaseServerClient();
   const { data: claimsData } = await supabase.auth.getClaims();
-
   if (!claimsData?.claims) redirect("/sign-in");
 
   const { data: property, error: propertyError } = await supabase
     .from("properties")
-    .select("id, organization_id, name, code, timezone, currency_code")
+    .select("id, organization_id, name, code")
     .eq("id", propertyId)
     .maybeSingle();
-
-  if (propertyError) throw new Error("Property context could not be loaded.");
+  if (propertyError) throw new Error("Property dashboard could not be loaded.");
   if (!property) notFound();
 
   const propertyContext = property as PropertyContext;
-  const [organizationResult, subscriptionResult, accessResult] = await Promise.all([
-    supabase
-      .from("organizations")
-      .select("name, lifecycle_state")
-      .eq("id", propertyContext.organization_id)
-      .maybeSingle(),
-    supabase
-      .from("organization_subscriptions")
-      .select("plan_code, status, property_limit, staff_limit, trial_ends_at")
-      .eq("organization_id", propertyContext.organization_id)
-      .maybeSingle(),
-    supabase.rpc("get_property_workspace_access", { target_property_id: propertyId }),
+  const [organizationResult, guestsResult, casesResult, whatsappResult] = await Promise.all([
+    supabase.from("organizations").select("name, lifecycle_state").eq("id", propertyContext.organization_id).maybeSingle(),
+    supabase.from("guest_profiles").select("id", { count: "exact", head: true }).eq("property_id", propertyId).eq("status", "active"),
+    supabase.from("operational_cases").select("id", { count: "exact", head: true }).eq("property_id", propertyId).in("status", ["open", "in_progress", "waiting"]),
+    supabase.from("whatsapp_conversations").select("unread_count").eq("property_id", propertyId).eq("status", "active"),
   ]);
-
-  if (organizationResult.error) throw new Error("Organization context could not be loaded.");
+  if (organizationResult.error) throw new Error("Property dashboard could not be loaded.");
   if (!organizationResult.data) notFound();
 
   const organization = organizationResult.data as OrganizationContext;
-  const subscription = subscriptionResult.data as SubscriptionContext | null;
-  const accessDecisions = (accessResult.data ?? []) as WorkspaceAccess[];
-  const accessByPermission = new Map(accessDecisions.map((access) => [access.permission_key, access]));
-  const enabledModules = workspaceModules.filter((module) => accessByPermission.get(module.permission)?.allowed);
-  const lockedModules = workspaceModules.filter((module) => !accessByPermission.get(module.permission)?.allowed);
-  const email = typeof claimsData.claims.email === "string" ? claimsData.claims.email : "Management user";
+  const unreadWhatsApp = (whatsappResult.data ?? []).reduce((total, row) => total + Number(row.unread_count ?? 0), 0);
+  const email = typeof claimsData.claims.email === "string" ? claimsData.claims.email : "Property owner";
+  const metrics = [
+    { label: "Active guests", value: guestsResult.count ?? 0, Icon: UsersRound },
+    { label: "Open requests", value: casesResult.count ?? 0, Icon: ClipboardList },
+    { label: "Unread WhatsApp", value: unreadWhatsApp, Icon: MessageCircleMore },
+  ];
 
   return (
     <AppShell email={email} property={{ id: propertyContext.id, code: propertyContext.code, name: propertyContext.name }}>
-    <main className="property-shell">
-      <section className="property-dashboard" aria-labelledby="property-title">
-        <Link className="back-link" href="/app">← Switch property</Link>
+      <main className="owner-dashboard-shell">
+        <section className="owner-dashboard" aria-labelledby="property-title">
+          <header className="owner-dashboard-header">
+            <div><p className="eyebrow">PROPERTY DASHBOARD</p><h1 id="property-title">Welcome to {propertyContext.name}</h1><p>{organization.name}</p></div>
+            <span className="owner-property-status"><span /> {organization.lifecycle_state === "suspended" ? "Access paused" : "Property active"}</span>
+          </header>
 
-        <div className="property-hero">
-          <div><p className="eyebrow">ACTIVE PROPERTY</p><h1 id="property-title">{propertyContext.name}</h1><p className="property-organization">{organization.name}</p></div>
-          <span className="lifecycle-badge">{formatState(organization.lifecycle_state)}</span>
-        </div>
+          <section className="owner-metrics" aria-label="Property overview">
+            {metrics.map(({ label, value, Icon }) => <article key={label}><span><Icon size={21} /></span><div><small>{label}</small><strong>{value}</strong></div></article>)}
+          </section>
 
-        <dl className="context-strip four-column" aria-label="Property context">
-          <div><dt>Timezone</dt><dd>{propertyContext.timezone}</dd></div>
-          <div><dt>Currency</dt><dd>{propertyContext.currency_code}</dd></div>
-          <div><dt>Access</dt><dd>{enabledModules.length} modules enabled</dd></div>
-          <div><dt>Subscription</dt><dd>{subscription ? `${formatState(subscription.plan_code)} · ${formatState(subscription.status)}` : "Not available"}</dd></div>
-        </dl>
+          <section className="owner-dashboard-grid">
+            <article className="owner-today-card">
+              <div className="owner-section-heading"><div><p className="eyebrow">TODAY</p><h2>What needs your attention</h2></div><CircleHelp size={22} /></div>
+              {(casesResult.count ?? 0) > 0 || unreadWhatsApp > 0 ? (
+                <div className="owner-attention-list">
+                  {(casesResult.count ?? 0) > 0 ? <div><span>{casesResult.count}</span><p><strong>Open guest requests</strong><small>Complaints, enquiries, and service requests waiting for the team.</small></p></div> : null}
+                  {unreadWhatsApp > 0 ? <div><span>{unreadWhatsApp}</span><p><strong>Unread WhatsApp messages</strong><small>Guests are waiting for a reply.</small></p></div> : null}
+                </div>
+              ) : (
+                <div className="owner-empty-state"><CheckCircle2 size={34} /><h3>You&apos;re all caught up.</h3><p>New guest requests and messages will appear here.</p></div>
+              )}
+            </article>
 
-        <section className="workspace-section" aria-labelledby="modules-title">
-          <div className="workspace-section-heading">
-            <div><p className="eyebrow">YOUR WORKSPACE</p><h2 id="modules-title">Permission-aware command centre.</h2></div>
-            <p>Every module is resolved against this property, your active membership, authentication strength, explicit denies, and the tenant lifecycle.</p>
-          </div>
-
-          {accessResult.error ? <p className="form-message" role="alert">Effective permissions could not be resolved. Workspace modules are fail-closed.</p> : null}
-
-          <div className="module-grid">
-            {enabledModules.map((module) => (
-              <article className="module-card" key={module.code}>
-                <div className="module-card-topline"><span className="module-code" aria-hidden="true">{module.code}</span><span className="module-status enabled">Enabled</span></div>
-                <h3>{module.title}</h3><p>{module.description}</p>
-                {module.permission === "staff.manage" ? <Link className="module-card-link" href={`/app/property/${propertyId}/team`}>Manage team →</Link> : null}
-              </article>
-            ))}
-          </div>
-
-          {enabledModules.length === 0 && !accessResult.error ? (
-            <div className="module-empty"><h3>No modules are enabled.</h3><p>Ask your platform administrator to review this tenant&apos;s permission set.</p></div>
-          ) : null}
-
-          {lockedModules.length > 0 ? (
-            <details className="locked-modules">
-              <summary>{lockedModules.length} modules not included in your access</summary>
-              <div>{lockedModules.map((module) => <span key={module.permission}>{module.title}</span>)}</div>
-            </details>
-          ) : null}
+            <aside className="owner-help-card">
+              <p className="eyebrow">AVKARSH SUPPORT</p><h2>Need help running the property?</h2><p>Call or message our team whenever you need onboarding or operational support.</p>
+              <a className="button primary" href="https://wa.me/919027872803?text=Hi%20Avkarsh%2C%20I%20need%20help%20with%20my%20property." target="_blank" rel="noreferrer"><MessageCircleMore size={18} /> WhatsApp support</a>
+              <a className="owner-support-phone" href="tel:+919027872803">+91 90278 72803</a>
+            </aside>
+          </section>
         </section>
-
-        <aside className="security-note" aria-labelledby="security-note-title">
-          <span className="security-note-mark" aria-hidden="true">✓</span>
-          <div><h2 id="security-note-title">Property and modules verified</h2><p>Opening this URL did not grant access. Property visibility came from RLS, and every module above was independently resolved from the active role.</p></div>
-        </aside>
-      </section>
-    </main>
+      </main>
     </AppShell>
   );
 }
