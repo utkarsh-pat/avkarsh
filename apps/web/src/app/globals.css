@@ -436,7 +436,7 @@ h2 { font-size: clamp(30px, 4vw, 48px); font-weight: 650; letter-spacing: -.04em
 .owner-dashboard-header > div > p:last-child { color: var(--body); font-size: 17px; }
 .owner-property-status { align-items: center; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 999px; color: #047857; display: inline-flex; font-size: 12px; font-weight: 700; gap: 8px; padding: 9px 13px; white-space: nowrap; }
 .owner-property-status > span { background: #10b981; border-radius: 50%; height: 7px; width: 7px; }
-.owner-metrics { display: grid; gap: 14px; grid-template-columns: repeat(4, 1fr); margin-top: 42px; }
+.owner-metrics { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 42px; }
 .owner-metrics article { align-items: center; background: var(--surface); border: 1px solid var(--hairline); border-radius: 16px; display: flex; gap: 14px; padding: 20px; }
 .owner-metrics article > span { align-items: center; background: var(--surface-subtle); border-radius: 11px; color: var(--primary); display: inline-flex; flex: 0 0 auto; height: 44px; justify-content: center; width: 44px; }
 .owner-metrics article > span svg { height: 20px; width: 20px; }
@@ -448,6 +448,12 @@ h2 { font-size: clamp(30px, 4vw, 48px); font-weight: 650; letter-spacing: -.04em
 .owner-metrics article[data-tone="green"] > span { background: #ecfdf5; color: #059669; }
 .owner-metrics p { color: var(--muted); font-size: 11px; margin: 0; }
 .owner-operations-grid { align-items: stretch; display: grid; gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 18px; }
+.owner-chart-grid { display: grid; gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 18px; }
+.owner-chart-card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 18px; min-width: 0; overflow: hidden; padding: 22px; }
+.owner-chart-card > header { align-items: flex-start; display: flex; justify-content: space-between; }
+.owner-chart-card h2 { font-size: 21px; margin: 6px 0 0; }
+.owner-chart-card > header > span { background: var(--surface-subtle); border-radius: 999px; color: var(--muted); font-size: 9px; padding: 7px 10px; }
+.owner-chart-canvas { height: 250px; margin-top: 20px; width: 100%; }
 .owner-panel { background: var(--surface); border: 1px solid var(--hairline); border-radius: 18px; min-width: 0; overflow: hidden; }
 .owner-panel > header { align-items: flex-start; border-bottom: 1px solid var(--hairline); display: flex; justify-content: space-between; padding: 24px 24px 20px; }
 .owner-panel > header h2 { font-size: 24px; margin: 7px 0 0; }
@@ -640,7 +646,7 @@ h2 { font-size: clamp(30px, 4vw, 48px); font-weight: 650; letter-spacing: -.04em
   .owner-dashboard-header { align-items: flex-start; flex-direction: column; }
   .owner-dashboard-header h1 { font-size: clamp(38px, 11vw, 52px); }
   .owner-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .owner-operations-grid, .owner-dashboard-bottom { grid-template-columns: 1fr; }
+  .owner-operations-grid, .owner-dashboard-bottom, .owner-chart-grid { grid-template-columns: 1fr; }
   .owner-metrics { margin-top: 30px; }
   .owner-help-card { grid-template-columns: auto minmax(0, 1fr); }
   .owner-help-card > div:last-child { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
@@ -819,6 +825,52 @@ h2 { font-size: clamp(30px, 4vw, 48px); font-weight: 650; letter-spacing: -.04em
 .reservation-kpis small { color: var(--muted); font-size: 10px; }
 .reservation-kpis strong { display: block; font-size: 25px; margin-top: 3px; }
 .reservation-kpis p { color: var(--muted); font-size: 10px; margin: 2px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.room-board { background: var(--surface); border: 1px solid var(--hairline); border-radius: 18px; margin-top: 18px; overflow: hidden; }
+.room-board > header { align-items: flex-start; display: flex; justify-content: space-between; padding: 24px; }
+.room-board > header h2 { font-size: 28px; margin: 7px 0 5px; }
+.room-board > header p:last-child { color: var(--muted); font-size: 11px; margin: 0; }
+.room-board > header > span { background: var(--surface-subtle); border-radius: 999px; color: var(--muted); font-size: 10px; padding: 7px 10px; }
+.room-card-grid { background: var(--surface-subtle); border-top: 1px solid var(--hairline); display: grid; gap: 14px; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 16px; }
+.room-card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 15px; min-width: 0; overflow: hidden; }
+.room-card[data-state="occupied"] { border-color: color-mix(in srgb, #1d4ed8 42%, var(--hairline)); box-shadow: inset 0 3px #1d4ed8; }
+.room-card[data-state="maintenance"], .room-card[data-state="inactive"] { opacity: .72; }
+.room-card > header { align-items: flex-start; display: flex; justify-content: space-between; padding: 17px; }
+.room-card > header > div { align-items: center; display: flex; gap: 11px; min-width: 0; }
+.room-card > header > div > span { align-items: center; background: var(--surface-subtle); border-radius: 10px; color: var(--primary); display: inline-flex; flex: 0 0 auto; height: 40px; justify-content: center; width: 40px; }
+.room-card > header svg { height: 18px; width: 18px; }
+.room-card > header small { color: var(--muted); font-size: 8px; text-transform: uppercase; }
+.room-card > header h3 { font-size: 22px; margin: 2px 0; }
+.room-card > header p { color: var(--muted); font-size: 9px; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.room-card > header > b { background: #ecfdf5; border-radius: 999px; color: #047857; font-size: 8px; padding: 6px 8px; text-transform: uppercase; }
+.room-card[data-state="occupied"] > header > b { background: #eff6ff; color: #1d4ed8; }
+.room-card[data-state="maintenance"] > header > b, .room-card[data-state="inactive"] > header > b { background: #fff7ed; color: #c2410c; }
+.room-card > dl { border-block: 1px solid var(--hairline); display: grid; grid-template-columns: repeat(3, 1fr); margin: 0; }
+.room-card > dl > div { border-right: 1px solid var(--hairline); min-width: 0; padding: 11px; }
+.room-card > dl > div:last-child { border-right: 0; }
+.room-card dt { align-items: center; color: var(--muted); display: flex; font-size: 7px; gap: 4px; text-transform: uppercase; }
+.room-card dt svg { height: 10px; width: 10px; }
+.room-card dd { font-size: 9px; font-weight: 650; margin: 6px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.room-current-guest, .room-vacant { margin: 14px; min-height: 113px; }
+.room-current-guest { background: color-mix(in srgb, #1d4ed8 7%, var(--surface)); border: 1px solid color-mix(in srgb, #1d4ed8 22%, var(--hairline)); border-radius: 11px; padding: 12px; }
+.room-current-guest > small { align-items: center; color: var(--primary); display: flex; font-size: 8px; gap: 5px; }
+.room-current-guest > small svg { height: 12px; width: 12px; }
+.room-current-guest > strong { display: block; font-size: 14px; margin-top: 8px; }
+.room-current-guest > p { color: var(--muted); font-size: 9px; margin: 4px 0 9px; }
+.room-current-guest > footer { align-items: center; display: flex; justify-content: space-between; }
+.room-current-guest > footer > span { color: var(--primary); font-family: var(--font-mono), monospace; font-size: 8px; }
+.room-current-guest .reservation-row-actions button span { display: none; }
+.room-vacant { align-items: center; color: #059669; display: flex; gap: 11px; justify-content: center; }
+.room-vacant > svg { flex: 0 0 auto; height: 22px; width: 22px; }
+.room-vacant strong { color: var(--ink); font-size: 12px; }
+.room-vacant p { color: var(--muted); font-size: 9px; margin: 4px 0 0; }
+.room-card > footer { align-items: center; border-top: 1px solid var(--hairline); display: flex; justify-content: space-between; padding: 12px 14px; }
+.room-card > footer small { color: var(--muted); font-size: 7px; }
+.room-card > footer strong { display: block; font-size: 10px; margin-top: 4px; }
+.room-card > footer p { color: var(--muted); font-size: 8px; margin: 3px 0 0; }
+.room-card > footer > a { color: var(--primary); font-size: 9px; font-weight: 700; text-decoration: none; }
+:root[data-theme="dark"] .room-card > header > b { background: rgba(5,150,105,.14); color: #6ee7b7; }
+:root[data-theme="dark"] .room-card[data-state="occupied"] > header > b { background: rgba(29,78,216,.18); color: #93c5fd; }
+:root[data-theme="dark"] .room-card[data-state="maintenance"] > header > b, :root[data-theme="dark"] .room-card[data-state="inactive"] > header > b { background: rgba(217,119,6,.14); color: #fcd34d; }
 .reservation-create-grid { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 18px; }
 .reservation-form-card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 16px; overflow: hidden; }
 .reservation-form-card[open] { grid-column: 1 / -1; }
@@ -887,11 +939,13 @@ h2 { font-size: clamp(30px, 4vw, 48px); font-weight: 650; letter-spacing: -.04em
 :root[data-theme="dark"] .status-pill.checked_out { background: rgba(100,116,139,.18); color: #cbd5e1; }
 
 @media (max-width: 1050px) {
+  .room-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .reservation-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .reservation-list > article { grid-template-columns: 42px minmax(180px, 1fr) minmax(120px, .7fr) auto; }
   .reservation-dates { display: none; }
 }
 @media (max-width: 760px) {
+  .room-card-grid { grid-template-columns: 1fr; padding: 12px; }
   .reservation-page { padding: 34px 16px 80px; }
   .reservation-page-heading { align-items: flex-start; flex-direction: column; }
   .reservation-page-heading h1 { font-size: clamp(38px, 12vw, 52px); }
@@ -907,6 +961,7 @@ h2 { font-size: clamp(30px, 4vw, 48px); font-weight: 650; letter-spacing: -.04em
   .reservation-row-actions { align-items: flex-end; flex-direction: column; }
 }
 @media (max-width: 480px) {
+  .room-board > header { padding: 18px; }
   .reservation-kpis { grid-template-columns: 1fr; }
   .reservation-form-grid, .reservation-booking-form .reservation-form-grid { grid-template-columns: 1fr; }
   .reservation-form-actions { display: grid; }

@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(16);
+select plan(17);
 
 select has_table('public', 'inventory_units', 'sellable inventory table exists');
 select has_table('public', 'reservations', 'reservation table exists');
@@ -66,8 +66,8 @@ set local request.jwt.claim.sub = '71000000-0000-0000-0000-000000000007';
 set local request.jwt.claims = '{"sub":"71000000-0000-0000-0000-000000000007","email":"inventory-owner@example.test","role":"authenticated","app_metadata":{"provider":"google","providers":["google"]}}';
 
 select lives_ok(
-  $$insert into public.inventory_units (id, organization_id, property_id, unit_code, display_name, unit_kind, category, max_occupancy)
-    values ('78000000-0000-0000-0000-000000000007', '73000000-0000-0000-0000-000000000007', '74000000-0000-0000-0000-000000000007', '101', 'Room 101', 'room', 'Deluxe', 3)$$,
+  $$insert into public.inventory_units (id, organization_id, property_id, unit_code, display_name, unit_kind, category, max_occupancy, nightly_rate_minor)
+    values ('78000000-0000-0000-0000-000000000007', '73000000-0000-0000-0000-000000000007', '74000000-0000-0000-0000-000000000007', '101', 'Room 101', 'room', 'Deluxe', 3, 250000)$$,
   'authorized owner can add matching room inventory'
 );
 
@@ -91,6 +91,12 @@ select lives_ok(
     'First Guest', '+919876543210', '2026-09-01', '2026-09-03', 2, 0, 'front_desk', null
   )$$,
   'owner can create a valid room reservation'
+);
+
+select results_eq(
+  $$select booked_amount_minor from public.reservations where primary_guest_name = 'First Guest'$$,
+  array[500000::bigint],
+  'reservation captures real gross revenue from nightly rate and stay length'
 );
 
 select throws_ok(

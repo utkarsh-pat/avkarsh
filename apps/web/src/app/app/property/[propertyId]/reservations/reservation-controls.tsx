@@ -32,6 +32,7 @@ export function ReservationCreationControls({ propertyId, inventoryUnit, units }
             <label>Category<input name="category" placeholder={noun === "bed" ? "Mixed dorm" : "Deluxe"} /></label>
             <label>Floor / zone<input name="floorLabel" placeholder={noun === "bed" ? "Dorm 1" : "First floor"} /></label>
             <label>Max guests<input name="maxOccupancy" type="number" min="1" max="50" defaultValue={noun === "bed" ? 1 : 2} required /></label>
+            <label>Nightly rate (₹)<input name="nightlyRate" type="number" min="0" max="1000000" step="0.01" defaultValue="0" required /></label>
           </div>
           <ActionMessage state={inventoryState} />
           <div className="reservation-form-actions"><button type="button" className="button secondary" onClick={() => inventoryDetails.current?.removeAttribute("open")}>Close</button><button className="button primary" disabled={inventoryPending}>{inventoryPending ? "Adding…" : `Add ${noun}`}</button></div>
