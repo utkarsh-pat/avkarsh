@@ -25,6 +25,7 @@ const inventorySchema = z.object({
   category: z.string().trim().max(80),
   floorLabel: z.string().trim().max(40),
   maxOccupancy: z.coerce.number().int().min(1).max(50),
+  nightlyRate: z.coerce.number().min(0).max(1000000),
 });
 
 export async function createInventoryUnit(_state: ReservationActionState, formData: FormData): Promise<ReservationActionState> {
@@ -32,6 +33,7 @@ export async function createInventoryUnit(_state: ReservationActionState, formDa
     propertyId: field(formData, "propertyId"), unitCode: field(formData, "unitCode"),
     displayName: field(formData, "displayName"), category: field(formData, "category"),
     floorLabel: field(formData, "floorLabel"), maxOccupancy: field(formData, "maxOccupancy"),
+    nightlyRate: field(formData, "nightlyRate") || "0",
   });
   if (!parsed.success) return { status: "error", message: "Enter a valid unit code, name, and capacity." };
 
@@ -49,6 +51,7 @@ export async function createInventoryUnit(_state: ReservationActionState, formDa
     category: parsed.data.category || null,
     floor_label: parsed.data.floorLabel || null,
     max_occupancy: parsed.data.maxOccupancy,
+    nightly_rate_minor: Math.round(parsed.data.nightlyRate * 100),
   });
   if (error) return { status: "error", message: actionError(error) };
   revalidatePath(`/app/property/${parsed.data.propertyId}/reservations`);

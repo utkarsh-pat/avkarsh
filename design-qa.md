@@ -1,7 +1,7 @@
 # Design QA
 
 - Source visual truth: `C:/Users/utkar/AppData/Local/Temp/codex-clipboard-dedfb380-654f-4594-ad40-8f91c095ffeb.png`, `C:/Users/utkar/AppData/Local/Temp/codex-clipboard-8f6c573c-989f-4550-bcfd-aed914916d0c.png`, and the WhatsApp Direct implementation in `S:/ServiZephyrTheRealBot/src/app/owner-dashboard/whatsapp-direct/page.js`.
-- Target: Avkarsh property-owner dashboard header, responsive navigation, reservations/inventory workspace, and WhatsApp Direct.
+- Target: Avkarsh property-owner live dashboard and room/bed control board, with the existing authenticated navigation and WhatsApp Direct patterns preserved.
 - Design language: existing royal-dark-blue Avkarsh tokens with the compact operational density and three-pane chat structure of ServiZephyr.
 
 ## Implementation review
@@ -12,6 +12,8 @@
 - WhatsApp Direct uses a responsive inbox/thread/profile layout with active/archive and tag filters, unread state, message delivery state, guest notes, and archive controls.
 - The WhatsApp thread becomes a single focused surface on narrow screens and provides an explicit back action to the inbox.
 - Reservations use room terminology for hotels and bed terminology for dormitory inventory.
+- Inventory is represented as responsive operational cards containing unit status, zone, capacity, nightly rate, current guest, current stay actions, and next arrival.
+- Dashboard metrics use the same compact operational-card pattern as the existing Avkarsh owner surface, with two responsive Recharts panels for booked revenue and occupancy.
 
 ## Functional and data checks
 
@@ -19,6 +21,8 @@
 - Reservation overlap prevention is enforced by a PostgreSQL exclusion constraint, not only in the UI.
 - WhatsApp supports live inbox refresh, Meta's 24-hour reply window, approved templates, and image/video/audio/document attachments up to 25 MB in a private Supabase Storage bucket.
 - Full web verification passed: lint, TypeScript, 16 unit tests, and Next.js production build.
+- Occupancy, in-house, arrivals, departures, booked revenue, complaints, enquiries, and unread WhatsApp values are derived from property-scoped live tables.
+- Revenue is gross booked accommodation value captured from the nightly unit rate and stay length; it is intentionally not a payment or subscription ledger.
 - Database migrations and pgTAP tests are delegated to the GitHub CI Supabase job because Docker is unavailable on this workstation.
 
 ## Visual verification status
